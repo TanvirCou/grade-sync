@@ -10,7 +10,7 @@
 .react-calendar {
   width: 100% !important;
   border: none !important;
-  border-radius: 10px !important
+  border-radius: 10px !important;
 }
 
 .react-calendar__navigation__label__labelText {
@@ -18,7 +18,7 @@
 }
 
 .react-calendar__tile--active {
-  background-color: #C3EBFA !important;
+  background-color: #c3ebfa !important;
 }
 
 .rbc-btn-group:first-child {
