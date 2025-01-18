@@ -3,6 +3,7 @@ import BigCalendar from '@/components/Calendar/BigCalendar';
 import PerformanceChart from '@/components/Chart/PerformanceChart';
 import UpdateModal from '@/components/Form/UpdateModal';
 import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 
 const SingleStudentPage = () => {
@@ -129,7 +130,12 @@ const SingleStudentPage = () => {
         <div className="rounded-md bg-white px-4 py-3">
           <p className="text-lg font-medium">Shortcuts</p>
           <div className="mt-2 flex flex-wrap gap-2 text-[10px]">
-            <p className="rounded-md bg-sky-100 p-2">Student&apos;s Teachers</p>
+            <Link
+              href={`/list/teachers?classId=2`}
+              className="cursor-pointer rounded-md bg-sky-100 p-2"
+            >
+              Student&apos;s Teachers
+            </Link>
             <p className="rounded-md bg-purple-100 p-2">
               Student&apos;s Classes
             </p>

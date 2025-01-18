@@ -3,21 +3,12 @@ import React from 'react';
 import { role } from '@/lib/data';
 import DeleteModal from '../Form/DeleteModal';
 import UpdateModal from '../Form/UpdateModal';
+import { Class, Subject, Teacher } from '@prisma/client';
 
-type TeacherProps = {
-  id: number;
-  teacherId: string;
-  name: string;
-  email: string;
-  photo: string;
-  phone: string;
-  subjects: string[];
-  classes: string[];
-  address: string;
-};
+type TeacherType = Teacher & { subjects: Subject[] } & { classes: Class[] };
 
 type TeacherTableProps = {
-  data: TeacherProps[];
+  data: TeacherType[];
 };
 
 const TeacherTable = ({ data }: TeacherTableProps) => {
@@ -37,11 +28,11 @@ const TeacherTable = ({ data }: TeacherTableProps) => {
         </thead>
         <tbody>
           {data &&
-            data.map((i: TeacherProps) => (
+            data.map((i: TeacherType) => (
               <tr key={i.id} className="hover">
                 <td className="flex items-center gap-2">
                   <Image
-                    src={i.photo}
+                    src={i.img || `/noAvatar.png`}
                     alt=""
                     width={25}
                     height={25}
@@ -52,14 +43,18 @@ const TeacherTable = ({ data }: TeacherTableProps) => {
                     <p className="text-[10px] text-gray-500">{i.email}</p>
                   </div>
                 </td>
-                <td className="text-xs">{i.teacherId}</td>
-                <td className="text-xs">{i.subjects.join(',')}</td>
-                <td className="text-xs">{i.classes.join(',')}</td>
+                <td className="text-xs">{i.username}</td>
+                <td className="text-xs">
+                  {i.subjects.map((i) => i.name).join("'")}
+                </td>
+                <td className="text-xs">
+                  {i.classes.map((i) => i.name).join(',')}
+                </td>
                 <td className="text-xs">{i.phone}</td>
                 <td className="text-xs">{i.address}</td>
                 <td>
                   <div className="flex items-center gap-2">
-                    <UpdateModal table="teacher" data={i} />
+                    <UpdateModal table="teacher" />
                     {role === 'admin' && <DeleteModal table="teacher" />}
                   </div>
                 </td>
