@@ -1,26 +1,17 @@
 import Image from 'next/image';
 import React from 'react';
-import { role } from '@/lib/data';
 import DeleteModal from '../Form/DeleteModal';
 import UpdateModal from '../Form/UpdateModal';
+import { Class, Student } from '@prisma/client';
 
-type StudentProps = {
-  id: number;
-  studentId: string;
-  name: string;
-  email: string;
-  photo: string;
-  phone: string;
-  grade: number;
-  class: string;
-  address: string;
-};
+type StudentType = Student & { class: Class };
 
 type StudentTableProps = {
-  data: StudentProps[];
+  data: StudentType[];
+  role?: string;
 };
 
-const StudentTable = ({ data }: StudentTableProps) => {
+const StudentTable = ({ data, role }: StudentTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -31,16 +22,16 @@ const StudentTable = ({ data }: StudentTableProps) => {
             <th>Grade</th>
             <th>Phone</th>
             <th>Address</th>
-            <th>Actions</th>
+            {role === 'admin' && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {data &&
-            data.map((i: StudentProps) => (
+            data.map((i: StudentType) => (
               <tr key={i.id} className="hover">
                 <td className="flex items-center gap-2">
                   <Image
-                    src={i.photo}
+                    src={i.img || `/noAvatar.png`}
                     alt=""
                     width={25}
                     height={25}
@@ -48,19 +39,21 @@ const StudentTable = ({ data }: StudentTableProps) => {
                   />
                   <div>
                     <p className="text-xs font-medium">{i.name}</p>
-                    <p className="text-[10px] text-gray-500">{i.class}</p>
+                    <p className="text-[10px] text-gray-500">{i.class.name}</p>
                   </div>
                 </td>
-                <td className="text-xs">{i.studentId}</td>
-                <td className="text-xs">{i.grade}</td>
+                <td className="text-xs">{i.username}</td>
+                <td className="text-xs">{i.class.name[0]}</td>
                 <td className="text-xs">{i.phone}</td>
                 <td className="text-xs">{i.address}</td>
-                <td>
-                  <div className="flex items-center gap-2">
-                    <UpdateModal table="student" />
-                    {role === 'admin' && <DeleteModal table="student" />}
-                  </div>
-                </td>
+                {role === 'admin' && (
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <UpdateModal table="student" />
+                      <DeleteModal table="student" />
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
         </tbody>

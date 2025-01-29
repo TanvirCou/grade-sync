@@ -1,22 +1,16 @@
 import React from 'react';
-import { role } from '@/lib/data';
 import DeleteModal from '../Form/DeleteModal';
 import UpdateModal from '../Form/UpdateModal';
+import { Class, Event } from '@prisma/client';
 
-type EventProps = {
-  id: number;
-  title: string;
-  class: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-};
+type EventType = Event & { class: Class | null };
 
 type EventTableProps = {
-  data: EventProps[];
+  data: EventType[];
+  role?: string;
 };
 
-const EventTable = ({ data }: EventTableProps) => {
+const EventTable = ({ data, role }: EventTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -27,24 +21,40 @@ const EventTable = ({ data }: EventTableProps) => {
             <th>Date</th>
             <th>Start Time</th>
             <th>End Time</th>
-            <th>Actions</th>
+            {role === 'admin' && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {data &&
-            data.map((i: EventProps) => (
+            data.map((i: EventType) => (
               <tr key={i.id} className="hover">
                 <td className="text-xs">{i.title}</td>
-                <td className="text-xs">{i.class}</td>
-                <td className="text-xs">{i.date}</td>
-                <td className="text-xs">{i.startTime}</td>
-                <td className="text-xs">{i.endTime}</td>
-                <td>
-                  <div className="flex items-center gap-2">
-                    <UpdateModal table="event" />
-                    {role === 'admin' && <DeleteModal table="event" />}
-                  </div>
+                <td className="text-xs">{i.class?.name || '-'}</td>
+                <td className="text-xs">
+                  {new Intl.DateTimeFormat('en-US').format(i.startTime)}
                 </td>
+                <td className="text-xs">
+                  {i.startTime.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                  })}
+                </td>
+                <td className="text-xs">
+                  {i.endTime.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                  })}
+                </td>
+                {role === 'admin' && (
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <UpdateModal table="event" />
+                      <DeleteModal table="event" />
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
         </tbody>

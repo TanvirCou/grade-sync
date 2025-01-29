@@ -3,6 +3,7 @@ import Pagination from '@/components/Table/Pagination';
 import TableSearch from '@/components/Table/TableSearch';
 import TeacherTable from '@/components/Table/TeacherTable';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@clerk/nextjs/server';
 import { Prisma } from '@prisma/client';
 import Image from 'next/image';
 import React from 'react';
@@ -10,6 +11,9 @@ import React from 'react';
 type SearchParams = Promise<{ [key: string]: string | undefined }>;
 
 const ListPageOfTeachers = async (props: { searchParams: SearchParams }) => {
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
   const searchParams = await props.searchParams;
   const { page, ...queryParams } = searchParams;
 
@@ -50,8 +54,8 @@ const ListPageOfTeachers = async (props: { searchParams: SearchParams }) => {
         subjects: true,
         classes: true,
       },
-      take: 5,
-      skip: 5 * (p - 1),
+      take: 10,
+      skip: 10 * (p - 1),
     }),
     prisma.teacher.count({
       where: query,
@@ -71,13 +75,13 @@ const ListPageOfTeachers = async (props: { searchParams: SearchParams }) => {
             <button className="flex h-7 w-7 items-center justify-center rounded-full bg-yellow-300">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            <CreateModal table="teacher" />
+            {role === 'admin' && <CreateModal table="teacher" />}
           </div>
         </div>
       </div>
 
       <div>
-        <TeacherTable data={teachers} />
+        <TeacherTable data={teachers} role={role} />
       </div>
 
       <div>

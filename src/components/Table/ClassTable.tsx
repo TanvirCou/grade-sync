@@ -1,21 +1,16 @@
 import React from 'react';
-import { role } from '@/lib/data';
 import DeleteModal from '../Form/DeleteModal';
 import UpdateModal from '../Form/UpdateModal';
+import { Class, Teacher } from '@prisma/client';
 
-type ClassProps = {
-  id: number;
-  name: string;
-  capacity: number;
-  grade: number;
-  supervisor: string;
-};
+type ClassType = Class & { supervisor: Teacher | null };
 
 type ClassTableProps = {
-  data: ClassProps[];
+  data: ClassType[];
+  role?: string;
 };
 
-const ClassTable = ({ data }: ClassTableProps) => {
+const ClassTable = ({ data, role }: ClassTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -25,23 +20,28 @@ const ClassTable = ({ data }: ClassTableProps) => {
             <th>Capacity</th>
             <th>Grade</th>
             <th>Supervisor</th>
-            <th>Actions</th>
+            {role === 'admin' && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {data &&
-            data.map((i: ClassProps) => (
+            data.map((i: ClassType) => (
               <tr key={i.id} className="hover">
                 <td className="text-xs">{i.name}</td>
                 <td className="text-xs">{i.capacity}</td>
-                <td className="text-xs">{i.grade}</td>
-                <td className="text-xs">{i.supervisor}</td>
-                <td>
-                  <div className="flex items-center gap-2">
-                    <UpdateModal table="class" />
-                    {role === 'admin' && <DeleteModal table="class" />}
-                  </div>
+                <td className="text-xs">{i.name[0]}</td>
+                <td className="text-xs">
+                  {i.supervisor &&
+                    i.supervisor.name + ' ' + i.supervisor.surname}
                 </td>
+                {role === 'admin' && (
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <UpdateModal table="class" />
+                      <DeleteModal table="class" />
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
         </tbody>

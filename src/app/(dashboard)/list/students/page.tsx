@@ -2,12 +2,60 @@ import CreateModal from '@/components/Form/CreateModal';
 import Pagination from '@/components/Table/Pagination';
 import StudentTable from '@/components/Table/StudentTable';
 import TableSearch from '@/components/Table/TableSearch';
-import { studentsData } from '@/lib/data';
+import { prisma } from '@/lib/prisma';
+import { auth } from '@clerk/nextjs/server';
+import { Prisma } from '@prisma/client';
 import Image from 'next/image';
 import React from 'react';
 
-const ListPageOfStudents = () => {
-  const data = studentsData ?? [];
+type SearchParams = Promise<{ [key: string]: string | undefined }>;
+
+const ListPageOfStudents = async (props: { searchParams: SearchParams }) => {
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  const searchParams = await props.searchParams;
+  const { page, ...queryParams } = searchParams;
+
+  const p = page ? parseInt(page) : 1;
+
+  const query: Prisma.StudentWhereInput = {};
+
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case 'teacherId':
+            query.class = {
+              lessons: {
+                some: { classId: parseInt(value) }, //need to check
+              },
+            };
+            break;
+          case 'search':
+            query.name = { contains: value, mode: 'insensitive' };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  const [students, totalCount] = await prisma.$transaction([
+    prisma.student.findMany({
+      where: query,
+      include: {
+        class: true,
+      },
+      take: 10,
+      skip: 10 * (p - 1),
+    }),
+    prisma.student.count({
+      where: query,
+    }),
+  ]);
+
   return (
     <div className="m-2 flex flex-1 flex-col gap-2 rounded-md bg-white px-4 py-2">
       <div className="flex items-center justify-between">
@@ -21,17 +69,17 @@ const ListPageOfStudents = () => {
             <button className="flex h-7 w-7 items-center justify-center rounded-full bg-yellow-300">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            <CreateModal table="student" />
+            {role === 'admin' && <CreateModal table="student" />}
           </div>
         </div>
       </div>
 
       <div>
-        <StudentTable data={data} />
+        <StudentTable data={students} role={role} />
       </div>
 
       <div>
-        <Pagination />
+        <Pagination page={p} count={totalCount} />
       </div>
     </div>
   );

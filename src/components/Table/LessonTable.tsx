@@ -1,20 +1,17 @@
 import React from 'react';
-import { role } from '@/lib/data';
 import DeleteModal from '../Form/DeleteModal';
 import UpdateModal from '../Form/UpdateModal';
+import { Lesson } from '@prisma/client';
 
-type LessonProps = {
-  id: number;
-  subject: string;
-  class: string;
-  teacher: string;
-};
+type LessonType = Lesson & { class: { name: string } } & {
+  subject: { name: string };
+} & { teacher: { name: string; surname: string } };
 
 type LessonTableProps = {
-  data: LessonProps[];
+  data: LessonType[];
+  role?: string;
 };
-
-const LessonTable = ({ data }: LessonTableProps) => {
+const LessonTable = ({ data, role }: LessonTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -23,22 +20,26 @@ const LessonTable = ({ data }: LessonTableProps) => {
             <th>Subject Name</th>
             <th>Class</th>
             <th>Teacher</th>
-            <th>Actions</th>
+            {role === 'admin' && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {data &&
-            data.map((i: LessonProps) => (
+            data.map((i: LessonType) => (
               <tr key={i.id} className="hover">
-                <td className="text-xs">{i.subject}</td>
-                <td className="text-xs">{i.class}</td>
-                <td className="text-xs">{i.teacher}</td>
-                <td>
-                  <div className="flex items-center gap-2">
-                    <UpdateModal table="lesson" />
-                    {role === 'admin' && <DeleteModal table="lesson" />}
-                  </div>
+                <td className="text-xs">{i.subject.name}</td>
+                <td className="text-xs">{i.class.name}</td>
+                <td className="text-xs">
+                  {i.teacher.name + ' ' + i.teacher.surname}
                 </td>
+                {role === 'admin' && (
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <UpdateModal table="lesson" />
+                      <DeleteModal table="lesson" />
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
         </tbody>

@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import React from 'react';
-import { role } from '@/lib/data';
 import DeleteModal from '../Form/DeleteModal';
 import UpdateModal from '../Form/UpdateModal';
 import { Class, Subject, Teacher } from '@prisma/client';
@@ -9,9 +8,10 @@ type TeacherType = Teacher & { subjects: Subject[] } & { classes: Class[] };
 
 type TeacherTableProps = {
   data: TeacherType[];
+  role?: string;
 };
 
-const TeacherTable = ({ data }: TeacherTableProps) => {
+const TeacherTable = ({ data, role }: TeacherTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -23,7 +23,7 @@ const TeacherTable = ({ data }: TeacherTableProps) => {
             <th>Classes</th>
             <th>Phone</th>
             <th>Address</th>
-            <th>Actions</th>
+            {role === 'admin' && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -52,12 +52,14 @@ const TeacherTable = ({ data }: TeacherTableProps) => {
                 </td>
                 <td className="text-xs">{i.phone}</td>
                 <td className="text-xs">{i.address}</td>
-                <td>
-                  <div className="flex items-center gap-2">
-                    <UpdateModal table="teacher" />
-                    {role === 'admin' && <DeleteModal table="teacher" />}
-                  </div>
-                </td>
+                {role === 'admin' && (
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <UpdateModal table="teacher" />
+                      <DeleteModal table="teacher" />
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
         </tbody>

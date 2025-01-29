@@ -1,3 +1,4 @@
+import { currentUser } from '@clerk/nextjs/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
@@ -117,8 +118,10 @@ const menuItems = [
   },
 ];
 
-const Sidebar = () => {
-  const role = 'admin';
+const Sidebar = async () => {
+  const session = await currentUser();
+  const role = session?.publicMetadata.role as string;
+
   return (
     <div className="flex flex-col gap-2 px-0 py-4 lg:px-2 lg:py-2">
       {menuItems.map((item, index) => (

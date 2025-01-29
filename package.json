@@ -12,6 +12,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.10.2",
     "@hookform/resolvers": "^3.10.0",
     "@prisma/client": "^6.2.1",
     "moment": "^2.30.1",

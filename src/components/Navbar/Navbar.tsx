@@ -1,7 +1,12 @@
+import { UserButton } from '@clerk/nextjs';
+import { currentUser } from '@clerk/nextjs/server';
 import Image from 'next/image';
 import React from 'react';
 
-const Navbar = () => {
+const Navbar = async () => {
+  const session = await currentUser();
+  const role = session?.publicMetadata.role as string;
+
   return (
     <div className="flex items-center justify-between px-4 py-2 shadow-sm">
       <div className="hidden w-fit items-center gap-x-1 rounded-2xl p-1.5 px-1 ring-1 ring-gray-300 md:flex">
@@ -26,9 +31,11 @@ const Navbar = () => {
         </div>
         <div>
           <p className="text-xs font-medium leading-3">Tanvir Ahmed</p>
-          <p className="text-right text-[10px]">Admin</p>
+          <p className="text-right text-[10px] first-letter:uppercase">
+            {role}
+          </p>
         </div>
-        <div className="cursor-pointer rounded-full">
+        {/* <div className="cursor-pointer rounded-full">
           <Image
             src="/avatar.png"
             alt="avatar"
@@ -36,7 +43,8 @@ const Navbar = () => {
             height={27}
             className="rounded-full"
           />
-        </div>
+        </div> */}
+        <UserButton />
       </div>
     </div>
   );
