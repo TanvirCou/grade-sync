@@ -5,12 +5,30 @@ import { Class, Teacher } from '@prisma/client';
 
 type ClassType = Class & { supervisor: Teacher | null };
 
+type TeachersDataProps = {
+  name: string;
+  id: string;
+  surname: string;
+};
+
+type ClassGradesProps = {
+  id: number;
+  level: number;
+};
+
 type ClassTableProps = {
   data: ClassType[];
   role?: string;
+  teachersData: TeachersDataProps[];
+  classGrades: ClassGradesProps[];
 };
 
-const ClassTable = ({ data, role }: ClassTableProps) => {
+const ClassTable = ({
+  data,
+  role,
+  teachersData,
+  classGrades,
+}: ClassTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -37,8 +55,13 @@ const ClassTable = ({ data, role }: ClassTableProps) => {
                 {role === 'admin' && (
                   <td>
                     <div className="flex items-center gap-2">
-                      <UpdateModal table="class" />
-                      <DeleteModal table="class" />
+                      <UpdateModal
+                        table="class"
+                        data={i}
+                        teachersData={teachersData}
+                        classGrades={classGrades}
+                      />
+                      <DeleteModal table="class" id={i.id} />
                     </div>
                   </td>
                 )}

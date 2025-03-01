@@ -5,12 +5,15 @@ import { Class, Event } from '@prisma/client';
 
 type EventType = Event & { class: Class | null };
 
+type ClassProps = { name: string; id: number };
+
 type EventTableProps = {
   data: EventType[];
   role?: string;
+  classes?: ClassProps[];
 };
 
-const EventTable = ({ data, role }: EventTableProps) => {
+const EventTable = ({ data, role, classes }: EventTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -50,8 +53,8 @@ const EventTable = ({ data, role }: EventTableProps) => {
                 {role === 'admin' && (
                   <td>
                     <div className="flex items-center gap-2">
-                      <UpdateModal table="event" />
-                      <DeleteModal table="event" />
+                      <UpdateModal table="event" data={i} classes={classes} />
+                      <DeleteModal table="event" id={i.id} />
                     </div>
                   </td>
                 )}

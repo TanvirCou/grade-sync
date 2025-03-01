@@ -1,4 +1,4 @@
-import { Day, PrismaClient, UserSex } from "@prisma/client";
+import { Day, PrismaClient, UserSex, ResType } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
@@ -159,6 +159,7 @@ async function main() {
       data: {
         score: 90, 
         studentId: `student${i}`, 
+        ...(i <= 5 ? { resultType: ResType.EXAM } : { resultType: ResType.ASSIGNMENT }), 
         ...(i <= 5 ? { examId: i } : { assignmentId: i - 5 }), 
       },
     });

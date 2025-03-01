@@ -7,11 +7,33 @@ type LessonType = Lesson & { class: { name: string } } & {
   subject: { name: string };
 } & { teacher: { name: string; surname: string } };
 
+type TeachersDataProps = {
+  name: string;
+  id: string;
+  surname: string;
+};
+
+type ClassProps = { name: string; id: number };
+
+type SubjectsProps = {
+  id: number;
+  name: string;
+};
+
 type LessonTableProps = {
   data: LessonType[];
   role?: string;
+  teachersData?: TeachersDataProps[];
+  classes?: ClassProps[];
+  subjects?: SubjectsProps[];
 };
-const LessonTable = ({ data, role }: LessonTableProps) => {
+const LessonTable = ({
+  data,
+  role,
+  teachersData,
+  classes,
+  subjects,
+}: LessonTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -35,8 +57,14 @@ const LessonTable = ({ data, role }: LessonTableProps) => {
                 {role === 'admin' && (
                   <td>
                     <div className="flex items-center gap-2">
-                      <UpdateModal table="lesson" />
-                      <DeleteModal table="lesson" />
+                      <UpdateModal
+                        table="lesson"
+                        data={i}
+                        teachersData={teachersData}
+                        classes={classes}
+                        subjects={subjects}
+                      />
+                      <DeleteModal table="lesson" id={i.id} />
                     </div>
                   </td>
                 )}

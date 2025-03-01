@@ -4,6 +4,9 @@ CREATE TYPE "UserSex" AS ENUM ('MALE', 'FEMALE');
 -- CreateEnum
 CREATE TYPE "Day" AS ENUM ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY');
 
+-- CreateEnum
+CREATE TYPE "ResType" AS ENUM ('EXAM', 'ASSIGNMENT');
+
 -- CreateTable
 CREATE TABLE "Admin" (
     "id" TEXT NOT NULL,
@@ -132,6 +135,7 @@ CREATE TABLE "Assignment" (
 CREATE TABLE "Result" (
     "id" SERIAL NOT NULL,
     "score" INTEGER NOT NULL,
+    "resultType" "ResType" NOT NULL,
     "examId" INTEGER,
     "assignmentId" INTEGER,
     "studentId" TEXT NOT NULL,

@@ -5,24 +5,38 @@ import { Result } from '@prisma/client';
 
 type ResultType = Result & { student: { name: string } } & {
   exam: {
+    id: number;
     title: string;
     startTime: Date;
     lesson: { class: { name: string }; teacher: { name: string } };
   } | null;
 } & {
   assignment: {
+    id: number;
     title: string;
     startDate: Date;
     lesson: { class: { name: string }; teacher: { name: string } };
   } | null;
 };
 
+type ExamProps = {
+  id: number;
+  title: string;
+};
+
+type AssignmentProps = {
+  id: number;
+  title: string;
+};
+
 type ResultTableProps = {
   data: ResultType[];
   role?: string;
+  exams?: ExamProps[];
+  assignments?: AssignmentProps[];
 };
 
-const ResultTable = ({ data, role }: ResultTableProps) => {
+const ResultTable = ({ data, role, exams, assignments }: ResultTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -63,8 +77,13 @@ const ResultTable = ({ data, role }: ResultTableProps) => {
                 {(role === 'admin' || role === 'teacher') && (
                   <td>
                     <div className="flex items-center gap-2">
-                      <UpdateModal table="result" />
-                      <DeleteModal table="result" />
+                      <UpdateModal
+                        table="result"
+                        data={i}
+                        exams={exams}
+                        assignments={assignments}
+                      />
+                      <DeleteModal table="result" id={i.id} />
                     </div>
                   </td>
                 )}

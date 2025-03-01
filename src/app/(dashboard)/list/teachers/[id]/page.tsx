@@ -1,11 +1,46 @@
 import Announcements from '@/components/Announcements/Announcements';
-import BigCalendar from '@/components/Calendar/BigCalendar';
+import BigCalendarContainer from '@/components/Calendar/BigCalendarContainer';
 import PerformanceChart from '@/components/Chart/PerformanceChart';
 import UpdateModal from '@/components/Form/UpdateModal';
+import { prisma } from '@/lib/prisma';
+import { auth } from '@clerk/nextjs/server';
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import React from 'react';
 
-const SingleTeacherPage = () => {
+type Params = Promise<{ id: string }>;
+
+const SingleTeacherPage = async ({ params }: { params: Params }) => {
+  const { id } = await params;
+
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+  const subjects = await prisma.subject.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  const teacherData = await prisma.teacher.findUnique({
+    where: { id },
+    include: {
+      subjects: true,
+      _count: {
+        select: {
+          subjects: true,
+          lessons: true,
+          classes: true,
+        },
+      },
+    },
+  });
+
+  if (!teacherData) {
+    return notFound();
+  }
+
   return (
     <div className="flex flex-col gap-2 p-2 xl:flex-row">
       <div className="w-full xl:w-2/3">
@@ -13,7 +48,7 @@ const SingleTeacherPage = () => {
           <div className="flex w-full items-center gap-2 rounded-md bg-sky-200 px-2 py-3 md:gap-0 lg:w-1/2 xl:gap-2">
             <div className="flex w-1/3 items-center justify-center">
               <Image
-                src="https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                src={teacherData?.img || '/noAvatar.png'}
                 alt=""
                 width={50}
                 height={50}
@@ -22,24 +57,16 @@ const SingleTeacherPage = () => {
             </div>
             <div className="flex w-2/3 flex-col gap-3">
               <div className="flex items-center gap-2">
-                <p className="text-md font-medium">Leonard Snyder</p>
-                <UpdateModal
-                  table="teacher"
-                  data={{
-                    id: 1,
-                    username: 'deanguerrero',
-                    email: 'deanguerrero@gmail.com',
-                    password: 'password',
-                    firstName: 'Dean',
-                    lastName: 'Guerrero',
-                    phone: '+1 234 567 89',
-                    address: '1234 Main St, Anytown, USA',
-                    bloodType: 'A+',
-                    birthday: '2000-01-01',
-                    sex: 'male',
-                    img: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200',
-                  }}
-                />
+                <p className="text-md font-medium">
+                  {teacherData?.name + ' ' + teacherData?.surname}
+                </p>
+                {role === 'admin' && (
+                  <UpdateModal
+                    table="teacher"
+                    subjects={subjects}
+                    data={teacherData}
+                  />
+                )}
               </div>
               <p className="text-xs text-gray-500">
                 Lorem ipsum, dolor sit amet consectetur adipisicing elit.
@@ -49,23 +76,27 @@ const SingleTeacherPage = () => {
                 <div>
                   <div className="flex items-center gap-1">
                     <Image src="/blood.png" alt="" width={12} height={12} />
-                    <p className="text-xs">O+</p>
+                    <p className="text-xs">{teacherData?.bloodType}</p>
                   </div>
 
                   <div className="flex items-center gap-1">
                     <Image src="/date.png" alt="" width={12} height={12} />
-                    <p className="text-xs">January 2025</p>
+                    <p className="text-xs">
+                      {new Intl.DateTimeFormat('en-US').format(
+                        teacherData?.birthday
+                      )}
+                    </p>
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center gap-1">
                     <Image src="/mail.png" alt="" width={12} height={12} />
-                    <span className="text-xs">user@gmail.com</span>
+                    <span className="text-xs">{teacherData?.email || '-'}</span>
                   </div>
 
                   <div className="flex items-center gap-1">
                     <Image src="/phone.png" alt="" width={12} height={12} />
-                    <span className="text-xs">+1 234 567</span>
+                    <span className="text-xs">{teacherData?.phone || '-'}</span>
                   </div>
                 </div>
               </div>
@@ -97,7 +128,9 @@ const SingleTeacherPage = () => {
                   className="h-6 w-6"
                 />
                 <div>
-                  <h1 className="text-xl font-semibold">2</h1>
+                  <h1 className="text-xl font-semibold">
+                    {teacherData?._count.subjects}
+                  </h1>
                   <span className="text-sm text-gray-400">Branches</span>
                 </div>
               </div>
@@ -113,7 +146,9 @@ const SingleTeacherPage = () => {
                   className="h-6 w-6"
                 />
                 <div>
-                  <h1 className="text-xl font-semibold">6</h1>
+                  <h1 className="text-xl font-semibold">
+                    {teacherData?._count.lessons}
+                  </h1>
                   <span className="text-sm text-gray-400">Lessons</span>
                 </div>
               </div>
@@ -127,7 +162,9 @@ const SingleTeacherPage = () => {
                   className="h-6 w-6"
                 />
                 <div>
-                  <h1 className="text-xl font-semibold">6</h1>
+                  <h1 className="text-xl font-semibold">
+                    {teacherData?._count.classes}
+                  </h1>
                   <span className="text-sm text-gray-400">Classes</span>
                 </div>
               </div>
@@ -137,7 +174,7 @@ const SingleTeacherPage = () => {
 
         <div className="mt-2 h-[900px] rounded-md bg-white p-2">
           <p className="px-1 text-lg font-semibold">Teacher&apos;s Schedule</p>
-          <BigCalendar />
+          <BigCalendarContainer type="teacherId" id={teacherData?.id} />
         </div>
       </div>
 

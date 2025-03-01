@@ -11,12 +11,18 @@ type AssignmentType = Assignment & {
   };
 };
 
+type LessonsProps = {
+  name: string;
+  id: number;
+};
+
 type AssignmentTableProps = {
   data: AssignmentType[];
   role?: string;
+  lessons?: LessonsProps[];
 };
 
-const AssignmentTable = ({ data, role }: AssignmentTableProps) => {
+const AssignmentTable = ({ data, role, lessons }: AssignmentTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -42,8 +48,12 @@ const AssignmentTable = ({ data, role }: AssignmentTableProps) => {
                 {(role === 'admin' || role === 'teacher') && (
                   <td>
                     <div className="flex items-center gap-2">
-                      <UpdateModal table="assignment" />
-                      <DeleteModal table="assignment" />
+                      <UpdateModal
+                        table="assignment"
+                        data={i}
+                        lessons={lessons}
+                      />
+                      <DeleteModal table="assignment" id={i.id} />
                     </div>
                   </td>
                 )}

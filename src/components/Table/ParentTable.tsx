@@ -39,8 +39,8 @@ const ParentTable = ({ data, role }: ParentTableProps) => {
                 {role === 'admin' && (
                   <td>
                     <div className="flex items-center gap-2">
-                      <UpdateModal table="parent" />
-                      <DeleteModal table="parent" />
+                      <UpdateModal table="parent" data={i} />
+                      <DeleteModal table="parent" id={i.id} />
                     </div>
                   </td>
                 )}

@@ -11,8 +11,8 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
     router.push(`${window.location.pathname}?${params}`);
   };
 
-  const hasPrev = 5 * (page - 1) > 0;
-  const hasNext = 5 * (page - 1) + 5 < count;
+  const hasPrev = 10 * (page - 1) > 0;
+  const hasNext = 10 * (page - 1) + 10 < count;
 
   return (
     <div className="flex items-center justify-between">
@@ -25,7 +25,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
       </button>
       <div className="flex items-center gap-2">
         {Array.from(
-          { length: Math.ceil(count / 5) },
+          { length: Math.ceil(count / 10) },
           (_, index) => index + 1
         ).map((pageIndex) => (
           <button

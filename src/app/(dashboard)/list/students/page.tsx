@@ -56,6 +56,14 @@ const ListPageOfStudents = async (props: { searchParams: SearchParams }) => {
     }),
   ]);
 
+  const studentGrades = await prisma.grade.findMany({
+    select: { id: true, level: true },
+  });
+
+  const studentClasses = await prisma.class.findMany({
+    include: { _count: { select: { students: true } } },
+  });
+
   return (
     <div className="m-2 flex flex-1 flex-col gap-2 rounded-md bg-white px-4 py-2">
       <div className="flex items-center justify-between">
@@ -69,7 +77,13 @@ const ListPageOfStudents = async (props: { searchParams: SearchParams }) => {
             <button className="flex h-7 w-7 items-center justify-center rounded-full bg-yellow-300">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === 'admin' && <CreateModal table="student" />}
+            {role === 'admin' && (
+              <CreateModal
+                table="student"
+                studentGrades={studentGrades}
+                studentClasses={studentClasses}
+              />
+            )}
           </div>
         </div>
       </div>

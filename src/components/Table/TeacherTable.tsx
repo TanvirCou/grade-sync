@@ -1,14 +1,20 @@
 import Image from 'next/image';
 import React from 'react';
 import DeleteModal from '../Form/DeleteModal';
-import UpdateModal from '../Form/UpdateModal';
 import { Class, Subject, Teacher } from '@prisma/client';
+import Link from 'next/link';
 
 type TeacherType = Teacher & { subjects: Subject[] } & { classes: Class[] };
+
+type subjectsProps = {
+  id: number;
+  name: string;
+};
 
 type TeacherTableProps = {
   data: TeacherType[];
   role?: string;
+  subjects?: subjectsProps[];
 };
 
 const TeacherTable = ({ data, role }: TeacherTableProps) => {
@@ -55,8 +61,19 @@ const TeacherTable = ({ data, role }: TeacherTableProps) => {
                 {role === 'admin' && (
                   <td>
                     <div className="flex items-center gap-2">
-                      <UpdateModal table="teacher" />
-                      <DeleteModal table="teacher" />
+                      <Link
+                        href={`/list/teachers/${i.id}`}
+                        className={`flex h-6 w-6 items-center justify-center rounded-full bg-sky-200`}
+                      >
+                        <Image
+                          src={`/view.png`}
+                          alt=""
+                          width={14}
+                          height={14}
+                        />
+                      </Link>
+
+                      <DeleteModal table="teacher" id={i.id} />
                     </div>
                   </td>
                 )}

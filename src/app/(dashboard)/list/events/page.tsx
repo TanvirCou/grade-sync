@@ -73,6 +73,13 @@ const ListPageOfEvents = async (props: { searchParams: SearchParams }) => {
     }),
   ]);
 
+  const classes = await prisma.class.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
   return (
     <div className="m-2 flex flex-1 flex-col gap-2 rounded-md bg-white px-4 py-2">
       <div className="flex items-center justify-between">
@@ -86,13 +93,15 @@ const ListPageOfEvents = async (props: { searchParams: SearchParams }) => {
             <button className="flex h-7 w-7 items-center justify-center rounded-full bg-yellow-300">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === 'admin' && <CreateModal table="event" />}
+            {role === 'admin' && (
+              <CreateModal table="event" classes={classes} />
+            )}
           </div>
         </div>
       </div>
 
       <div>
-        <EventTable data={events} role={role} />
+        <EventTable data={events} role={role} classes={classes} />
       </div>
 
       <div>

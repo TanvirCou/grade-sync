@@ -95,6 +95,23 @@ const ListPageOfResults = async (props: { searchParams: SearchParams }) => {
     }),
   ]);
 
+  const exams = await prisma.exam.findMany({
+    where: {
+      ...(role === 'teacher' ? { lesson: { teacherId: currentUserId } } : {}),
+    },
+    select: { id: true, title: true },
+  });
+
+  const assignments = await prisma.assignment.findMany({
+    where: {
+      ...(role === 'teacher' ? { lesson: { teacherId: currentUserId } } : {}),
+    },
+    select: { id: true, title: true },
+  });
+
+  // const allres = [...exams, ...assignments];
+  // // console.log(allres);
+
   return (
     <div className="m-2 flex flex-1 flex-col gap-2 rounded-md bg-white px-4 py-2">
       <div className="flex items-center justify-between">
@@ -109,14 +126,23 @@ const ListPageOfResults = async (props: { searchParams: SearchParams }) => {
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {(role === 'admin' || role === 'teacher') && (
-              <CreateModal table="result" />
+              <CreateModal
+                table="result"
+                exams={exams}
+                assignments={assignments}
+              />
             )}
           </div>
         </div>
       </div>
 
       <div>
-        <ResultTable data={results} role={role} />
+        <ResultTable
+          data={results}
+          role={role}
+          exams={exams}
+          assignments={assignments}
+        />
       </div>
 
       <div>

@@ -11,12 +11,18 @@ type ExamType = Exam & {
   };
 };
 
+type LessonsProps = {
+  name: string;
+  id: number;
+};
+
 type ExamTableProps = {
   data: ExamType[];
   role?: string;
+  lessons?: LessonsProps[];
 };
 
-const ExamTable = ({ data, role }: ExamTableProps) => {
+const ExamTable = ({ data, role, lessons }: ExamTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -42,8 +48,8 @@ const ExamTable = ({ data, role }: ExamTableProps) => {
                 {(role === 'admin' || role === 'teacher') && (
                   <td>
                     <div className="flex items-center gap-2">
-                      <UpdateModal table="exam" />
-                      <DeleteModal table="exam" />
+                      <UpdateModal table="exam" data={i} lessons={lessons} />
+                      <DeleteModal table="exam" id={i.id} />
                     </div>
                   </td>
                 )}

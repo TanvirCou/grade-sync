@@ -5,12 +5,15 @@ import { Announcement, Class } from '@prisma/client';
 
 type AnnouncementType = Announcement & { class: Class | null };
 
+type ClassProps = { name: string; id: number };
+
 type AnnouncementTableProps = {
   data: AnnouncementType[];
   role?: string;
+  classes?: ClassProps[];
 };
 
-const AnnouncementTable = ({ data, role }: AnnouncementTableProps) => {
+const AnnouncementTable = ({ data, role, classes }: AnnouncementTableProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-xs">
@@ -34,8 +37,12 @@ const AnnouncementTable = ({ data, role }: AnnouncementTableProps) => {
                 {role === 'admin' && (
                   <td>
                     <div className="flex items-center gap-2">
-                      <UpdateModal table="announcement" />
-                      <DeleteModal table="announcement" />
+                      <UpdateModal
+                        table="announcement"
+                        data={i}
+                        classes={classes}
+                      />
+                      <DeleteModal table="announcement" id={i.id} />
                     </div>
                   </td>
                 )}

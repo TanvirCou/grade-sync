@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 .rbc-time-column .rbc-timeslot-group {
   min-width: 115px !important;
   min-height: 80px !important;
