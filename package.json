@@ -20,7 +20,7 @@
     "next-cloudinary": "^6.16.0",
     "prisma": "^6.2.1",
     "react": "^19.0.0-rc-66855b96-20241106",
-    "react-big-calendar": "^1.17.1",
+    "react-big-calendar": "^1.18.0",
     "react-calendar": "^5.1.0",
     "react-dom": "^19.0.0-rc-66855b96-20241106",
     "react-hook-form": "^7.54.2",
