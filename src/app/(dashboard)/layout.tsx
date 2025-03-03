@@ -4,17 +4,21 @@ import React from 'react';
 import logo from '../../../public/logo.png';
 import Sidebar from '@/components/Sidebar/Sidebar';
 import Navbar from '@/components/Navbar/Navbar';
+import { currentUser } from '@clerk/nextjs/server';
 
-const DashboardLayout = ({
+const DashboardLayout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
+  const session = await currentUser();
+  const role = session?.publicMetadata.role as string;
+
   return (
     <div className="flex h-screen">
       <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%]">
         <Link
-          href="/"
+          href={`/${role}`}
           className="flex items-center justify-center gap-1 p-2 lg:justify-start"
         >
           <Image src={logo} alt="" width={25} height={25} />

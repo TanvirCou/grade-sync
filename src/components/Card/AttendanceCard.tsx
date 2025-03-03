@@ -26,7 +26,7 @@ const AttendanceCard = async ({ id }: { id: string }) => {
         className="h-6 w-6"
       />
       <div>
-        <h1 className="text-xl font-semibold">{percentage || '-'}</h1>
+        <h1 className="text-xl font-semibold">{percentage || '-'}%</h1>
         <span className="text-sm text-gray-400">Attendance</span>
       </div>
     </div>

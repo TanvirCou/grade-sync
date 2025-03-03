@@ -30,7 +30,7 @@ const Navbar = async () => {
           </p>
         </div>
         <div>
-          <p className="text-xs font-medium leading-3">Tanvir Ahmed</p>
+          <p className="text-xs font-medium leading-3">{session?.username}</p>
           <p className="text-right text-[10px] first-letter:uppercase">
             {role}
           </p>

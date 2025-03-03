@@ -1,3 +1,4 @@
+import { SignOutButton } from '@clerk/nextjs';
 import { currentUser } from '@clerk/nextjs/server';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -114,8 +115,8 @@ const Sidebar = async () => {
         },
         {
           icon: '/logout.png',
-          label: 'Logout',
-          href: '/logout',
+          label: <SignOutButton redirectUrl="/sign-in" />,
+          href: '/sign-in',
           visible: ['admin', 'teacher', 'student', 'parent'],
         },
       ],
@@ -140,7 +141,7 @@ const Sidebar = async () => {
                   >
                     <Image
                       src={subItem.icon}
-                      alt={subItem.label}
+                      alt="icon"
                       width={14}
                       height={14}
                     />

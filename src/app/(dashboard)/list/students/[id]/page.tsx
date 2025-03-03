@@ -176,19 +176,35 @@ const SingleStudentPage = async ({ params }: { params: Params }) => {
           <p className="text-lg font-medium">Shortcuts</p>
           <div className="mt-2 flex flex-wrap gap-2 text-[10px]">
             <Link
-              href={`/list/teachers?classId=2`}
+              href={`/list/teachers?classId=${studentData.class.id}`}
               className="cursor-pointer rounded-md bg-sky-100 p-2"
             >
               Student&apos;s Teachers
             </Link>
-            <p className="rounded-md bg-purple-100 p-2">
-              Student&apos;s Classes
-            </p>
-            <p className="rounded-md bg-yellow-100 p-2">
+            <Link
+              href={`/list/lessons?classId=${studentData.class.id}`}
+              className="cursor-pointer rounded-md bg-yellow-100 p-2"
+            >
               Student&apos;s Lessons
-            </p>
-            <p className="rounded-md bg-teal-100 p-2">Student&apos;s Exams</p>
-            <p className="rounded-md bg-pink-100 p-2">Student&apos;s Results</p>
+            </Link>
+            <Link
+              href={`/list/exams?classId=${studentData.class.id}`}
+              className="cursor-pointer rounded-md bg-teal-100 p-2"
+            >
+              Student&apos;s Exams
+            </Link>
+            <Link
+              href={`/list/assignments?classId=${studentData.class.id}`}
+              className="cursor-pointer rounded-md bg-purple-100 p-2"
+            >
+              Student&apos;s Assignments
+            </Link>
+            <Link
+              href={`/list/results?studentId=${studentData.id}`}
+              className="cursor-pointer rounded-md bg-pink-100 p-2"
+            >
+              Student&apos;s Results
+            </Link>
           </div>
         </div>
 

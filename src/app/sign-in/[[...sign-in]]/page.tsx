@@ -9,10 +9,9 @@ export default function Page() {
 
   useEffect(() => {
     const role = user?.publicMetadata.role;
+    console.log(role);
 
     if (role) {
-      console.log(role);
-
       router.push(`/${role}`);
     }
   }, [user, router]);

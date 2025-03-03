@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Roboto } from 'next/font/google';
 import './globals.css';
-import { ClerkProvider } from '@clerk/nextjs';
+import { ClerkLoaded, ClerkLoading, ClerkProvider } from '@clerk/nextjs';
 import { ToastContainer } from 'react-toastify';
 
 const roboto = Roboto({
@@ -25,7 +25,19 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${roboto.className} antialiased`}>
-          {children} <ToastContainer position="bottom-right" theme="dark" />
+          <div>
+            <ClerkLoading>
+              <div className="flex h-screen items-center justify-center">
+                <span className="loading loading-bars loading-lg"></span>
+              </div>
+            </ClerkLoading>
+            <ClerkLoaded>
+              <div>
+                {children}{' '}
+                <ToastContainer position="bottom-right" theme="dark" />
+              </div>
+            </ClerkLoaded>
+          </div>
         </body>
       </html>
     </ClerkProvider>
