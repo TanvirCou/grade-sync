@@ -1,15 +1,22 @@
-import { currentUser } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
-import React from 'react';
+'use client';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
 
-const page = async () => {
-  const session = await currentUser();
-  const role = session?.publicMetadata.role as string;
-  if (role) {
-    redirect(`/${role}`);
-  } else {
-    redirect('/sign-in');
-  }
+const Homepage = () => {
+  const { user } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    const role = user?.publicMetadata.role;
+    console.log(role);
+
+    if (role) {
+      router.push(`/${role}`);
+    } else {
+      router.push('/sign-in');
+    }
+  }, [user, router]);
 
   return (
     <div className="flex h-screen items-center justify-center">
@@ -18,4 +25,4 @@ const page = async () => {
   );
 };
 
-export default page;
+export default Homepage;
