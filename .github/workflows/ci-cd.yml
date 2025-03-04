@@ -56,21 +56,37 @@ jobs:
 
     - name: Install Vercel CLI
       run: npm install --global vercel@latest
-
-    - name: Pull Vercel Environment Information
-      run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-    - name: Build Project Artifacts
+    - name: Set environment variables
       env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        PGHOST: ${{ secrets.PGHOST }}
+        PGHOST_UNPOOLED: ${{ secrets.PGHOST_UNPOOLED }}
+        PGUSER: ${{ secrets.PGUSER }}
+        PGDATABASE: ${{ secrets.PGDATABASE }}
+        PGPASSWORD: ${{ secrets.PGPASSWORD }}
+
+        POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
         POSTGRES_URL_NON_POOLING: ${{ secrets.POSTGRES_URL_NON_POOLING }}
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_DATABASE: ${{ secrets.POSTGRES_DATABASE }}
+        POSTGRES_URL_NO_SSL: ${{ secrets.POSTGRES_URL_NO_SSL }}
         POSTGRES_PRISMA_URL: ${{ secrets.POSTGRES_PRISMA_URL }}
 
         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
         CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
         NEXT_PUBLIC_CLERK_SIGN_IN_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_IN_URL }}
-
         NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
         NEXT_PUBLIC_CLOUDINARY_API_KEY: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_API_KEY }}
+
+      run: echo "Environment variables set."
+
+    - name: Pull Vercel Environment Information
+      run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+    - name: Build Project Artifacts
       run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
     - name: Deploy Project Artifacts to Vercel
