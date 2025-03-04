@@ -1,8 +1,10 @@
 {
     "build": {
         "env": {
+            "PRISMA_GENERATE": "true",
             "NODE_ENV": "production",
             "NPM_FLAGS": "--legacy-peer-deps"
-        }
+        },
+        "buildCommand": "npx prisma generate && next build"
     }
 }
