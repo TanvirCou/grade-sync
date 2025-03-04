@@ -20,7 +20,7 @@ const Homepage = () => {
 
   return (
     <div className="flex h-screen items-center justify-center">
-      <span className="loading loading-bars loading-lg"></span>
+      <span className="loading loading-bars loading-lg">Hey</span>
     </div>
   );
 };
