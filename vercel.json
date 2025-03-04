@@ -1,7 +1,8 @@
 {
     "build": {
         "env": {
-            "NPM_FLAGS": "--legacy-peer-deps"
-        }
+            "NODE_ENV": "production"
+        },
+        "command": "npm run build"
     }
 }
