@@ -4,12 +4,29 @@ import PerformanceChart from '@/components/Chart/PerformanceChart';
 import UpdateModal from '@/components/Form/UpdateModal';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
+import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import React from 'react';
 
 type Params = Promise<{ id: string }>;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Params;
+}): Promise<Metadata> {
+  const { id } = await params;
+
+  const teacherData = await prisma.teacher.findUnique({
+    where: { id },
+  });
+
+  return {
+    title: `grade-sync |${teacherData?.name}`,
+  };
+}
 
 const SingleTeacherPage = async ({ params }: { params: Params }) => {
   const { id } = await params;

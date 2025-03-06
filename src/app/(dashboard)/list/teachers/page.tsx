@@ -5,10 +5,16 @@ import TeacherTable from '@/components/Table/TeacherTable';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 import { Prisma } from '@prisma/client';
+import { Metadata } from 'next';
 import Image from 'next/image';
 import React from 'react';
 
 type SearchParams = Promise<{ [key: string]: string | undefined }>;
+
+export const metadata: Metadata = {
+  title: 'grade-sync | teachers',
+  description: 'This is a school management webapp',
+};
 
 const ListPageOfTeachers = async (props: { searchParams: SearchParams }) => {
   const { sessionClaims } = await auth();

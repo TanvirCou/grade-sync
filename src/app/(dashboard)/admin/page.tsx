@@ -6,8 +6,14 @@ import FinanceChart from '@/components/Chart/FinanceChart';
 import EventContainer from '@/components/Event/EventContainer';
 import { prisma } from '@/lib/prisma';
 import React from 'react';
+import type { Metadata } from 'next';
 
 type SearchParams = Promise<{ [key: string]: string | undefined }>;
+
+export const metadata: Metadata = {
+  title: 'grade-sync | admin dashboard',
+  description: 'This is a school management webapp',
+};
 
 const AdminPage = async (props: { searchParams: SearchParams }) => {
   const searchParams = await props.searchParams;

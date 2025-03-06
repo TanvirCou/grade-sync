@@ -4,6 +4,12 @@ import EventCalendar from '@/components/Calendar/EventCalendar';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 import React from 'react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'grade-sync | student dashboard',
+  description: 'This is a school management webapp',
+};
 
 const StudentPage = async () => {
   const { sessionClaims } = await auth();

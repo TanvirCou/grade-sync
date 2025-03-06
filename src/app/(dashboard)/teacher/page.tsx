@@ -1,7 +1,13 @@
 import Announcements from '@/components/Announcements/Announcements';
 import BigCalendarContainer from '@/components/Calendar/BigCalendarContainer';
 import { auth } from '@clerk/nextjs/server';
+import { Metadata } from 'next';
 import React from 'react';
+
+export const metadata: Metadata = {
+  title: 'grade-sync | teacher dashboard',
+  description: 'This is a school management webapp',
+};
 
 const TeacherPage = async () => {
   const { sessionClaims } = await auth();

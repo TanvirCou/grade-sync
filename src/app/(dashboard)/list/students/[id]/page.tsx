@@ -5,12 +5,29 @@ import PerformanceChart from '@/components/Chart/PerformanceChart';
 import UpdateModal from '@/components/Form/UpdateModal';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
+import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import React, { Suspense } from 'react';
 
 type Params = Promise<{ id: string }>;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Params;
+}): Promise<Metadata> {
+  const { id } = await params;
+
+  const studentData = await prisma.student.findUnique({
+    where: { id },
+  });
+
+  return {
+    title: `grade-sync |${studentData?.name}`,
+  };
+}
 
 const SingleStudentPage = async ({ params }: { params: Params }) => {
   const { id } = await params;

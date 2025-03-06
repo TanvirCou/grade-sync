@@ -3,6 +3,12 @@ import BigCalendarContainer from '@/components/Calendar/BigCalendarContainer';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 import React from 'react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'grade-sync | parent dashboard',
+  description: 'This is a school management webapp',
+};
 
 const ParentPage = async () => {
   const { sessionClaims } = await auth();
