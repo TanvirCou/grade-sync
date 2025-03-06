@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import React from 'react';
 
 export const metadata: Metadata = {
-  title: 'grade-sync | profile',
+  title: 'GradeSync | My Profile',
   description: 'This is a school management webapp',
 };
 

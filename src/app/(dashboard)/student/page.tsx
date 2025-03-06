@@ -7,7 +7,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'grade-sync | student dashboard',
+  title: 'GradeSync | Student Dashboard',
   description: 'This is a school management webapp',
 };
 

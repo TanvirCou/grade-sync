@@ -11,7 +11,7 @@ import type { Metadata } from 'next';
 type SearchParams = Promise<{ [key: string]: string | undefined }>;
 
 export const metadata: Metadata = {
-  title: 'grade-sync | admin dashboard',
+  title: 'GradeSync | Admin Dashboard',
   description: 'This is a school management webapp',
 };
 

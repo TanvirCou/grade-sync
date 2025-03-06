@@ -12,7 +12,7 @@ import React from 'react';
 type SearchParams = Promise<{ [key: string]: string | undefined }>;
 
 export const metadata: Metadata = {
-  title: 'grade-sync | parents',
+  title: 'GradeSync | Parents',
   description: 'This is a school management webapp',
 };
 

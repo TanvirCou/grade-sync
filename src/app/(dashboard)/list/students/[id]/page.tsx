@@ -25,7 +25,7 @@ export async function generateMetadata({
   });
 
   return {
-    title: `grade-sync |${studentData?.name}`,
+    title: `GradeSync | ${studentData?.name}`,
   };
 }
 

@@ -12,7 +12,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: 'grade-sync',
+  title: 'GradeSync',
   description: 'This is a school management webapp',
 };
 
