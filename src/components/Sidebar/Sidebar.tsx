@@ -113,24 +113,24 @@ const Sidebar = async () => {
           href: '/settings',
           visible: ['admin', 'teacher', 'student', 'parent'],
         },
-        {
-          icon: '/logout.png',
-          label: <SignOutButton redirectUrl="/sign-in" />,
-          href: '/sign-in',
-          visible: ['admin', 'teacher', 'student', 'parent'],
-        },
+        // {
+        //   icon: '/logout.png',
+        //   label: <SignOutButton redirectUrl="/sign-in" />,
+        //   href: '/sign-in',
+        //   visible: ['admin', 'teacher', 'student', 'parent'],
+        // },
       ],
     },
   ];
 
   return (
-    <div className="flex flex-col gap-2 px-0 py-4 lg:px-2 lg:py-2">
+    <div className="flex flex-col gap-2 px-0 py-6 lg:px-2 lg:py-2">
       {menuItems.map((item, index) => (
         <div key={index} className="flex flex-col gap-1">
           <h3 className="hidden text-sm font-medium text-gray-400 lg:block">
             {item.title}
           </h3>
-          <ul className="flex flex-col gap-1.5 lg:gap-0.5">
+          <ul className="flex flex-col gap-3 lg:gap-0.5">
             {item.items.map((subItem, subIndex) => {
               if (subItem.visible.includes(role)) {
                 return (
@@ -141,7 +141,7 @@ const Sidebar = async () => {
                   >
                     <Image
                       src={subItem.icon}
-                      alt="icon"
+                      alt={subItem.label}
                       width={14}
                       height={14}
                     />
@@ -155,6 +155,12 @@ const Sidebar = async () => {
           </ul>
         </div>
       ))}
+      <div className="-mt-1.5 flex cursor-pointer items-center justify-center gap-2 rounded-md px-1 py-1 hover:bg-sky-100 lg:justify-start">
+        <Image src="/logout.png" alt="logout" width={14} height={14} />
+        <p className="hidden text-xs text-gray-600 lg:block">
+          <SignOutButton redirectUrl="/sign-in" />
+        </p>
+      </div>
     </div>
   );
 };

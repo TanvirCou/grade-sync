@@ -15,7 +15,7 @@ const DashboardLayout = async ({
   const role = session?.publicMetadata.role as string;
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen w-full overflow-y-hidden">
       <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%]">
         <Link
           href={`/${role}`}
@@ -28,7 +28,7 @@ const DashboardLayout = async ({
         </Link>
         <Sidebar />
       </div>
-      <div className="flex w-[86%] flex-col overflow-y-scroll bg-gray-100 md:w-[92%] lg:w-[84%] xl:w-[86%]">
+      <div className="flex w-[86%] flex-col overflow-x-hidden overflow-y-scroll bg-gray-100 md:w-[92%] lg:w-[84%] xl:w-[86%]">
         <Navbar />
         {children}
       </div>

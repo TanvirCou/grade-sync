@@ -26,7 +26,7 @@ const ParentPage = async () => {
         <BigCalendarContainer type="classId" id={classItem[0]?.id} />
       </div>
 
-      <div className="flex w-full flex-col gap-4 px-1 lg:w-[33%]">
+      <div className="mt-2 flex w-full flex-col gap-4 px-1 lg:mt-0 lg:w-[33%]">
         <Announcements />
       </div>
     </div>

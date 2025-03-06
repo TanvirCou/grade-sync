@@ -55,7 +55,7 @@ const ResultTable = ({ data, role, exams, assignments }: ResultTableProps) => {
           {data &&
             data.map((i: ResultType) => (
               <tr key={i.id} className="hover">
-                <td className="text-xs">
+                <td className="text-nowrap text-xs">
                   {i.exam?.title || i.assignment?.title}
                 </td>
                 <td className="text-xs">{i.student.name}</td>

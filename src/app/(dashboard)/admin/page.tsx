@@ -41,7 +41,7 @@ const AdminPage = async (props: { searchParams: SearchParams }) => {
         </div>
       </div>
 
-      <div className="flex w-full flex-col gap-4 px-1 lg:w-[33%]">
+      <div className="mt-2 flex w-full flex-col gap-2 px-1 lg:mt-0 lg:w-[33%]">
         <EventContainer dateParams={date} />
         <Announcements />
       </div>

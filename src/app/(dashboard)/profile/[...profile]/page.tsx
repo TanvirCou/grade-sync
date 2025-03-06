@@ -1,7 +1,7 @@
 import { UserProfile } from '@clerk/nextjs';
 import React from 'react';
 
-const page = () => {
+const UserProfilePage = () => {
   return (
     <div className="flex w-full justify-center">
       <UserProfile />
@@ -9,4 +9,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default UserProfilePage;

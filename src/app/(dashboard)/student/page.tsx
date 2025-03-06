@@ -19,8 +19,6 @@ const StudentPage = async () => {
     },
   });
 
-  console.log(classItem);
-
   return (
     <div className="w-full flex-1 gap-2 py-1.5 lg:flex lg:gap-0">
       <div className="mx-2 h-full w-full rounded-lg bg-white p-2 lg:w-[67%]">
@@ -30,7 +28,7 @@ const StudentPage = async () => {
         <BigCalendarContainer type="classId" id={classItem[0]?.id} />
       </div>
 
-      <div className="flex w-full flex-col gap-4 px-1 lg:w-[33%]">
+      <div className="mt-2 flex w-full flex-col gap-2 px-1 lg:mt-0 lg:w-[33%]">
         <EventCalendar />
         <Announcements />
       </div>

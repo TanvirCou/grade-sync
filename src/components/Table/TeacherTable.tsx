@@ -42,7 +42,7 @@ const TeacherTable = ({ data, role }: TeacherTableProps) => {
                     alt=""
                     width={25}
                     height={25}
-                    className="h-8 w-8 rounded-full object-cover"
+                    className="hidden h-8 w-8 rounded-full object-cover md:block"
                   />
                   <div>
                     <p className="text-xs font-medium">{i.name}</p>
@@ -56,7 +56,7 @@ const TeacherTable = ({ data, role }: TeacherTableProps) => {
                 <td className="text-xs">
                   {i.classes.map((i) => i.name).join(',')}
                 </td>
-                <td className="text-xs">{i.phone}</td>
+                <td className="text-nowrap text-xs">{i.phone}</td>
                 <td className="text-xs">{i.address}</td>
                 {role === 'admin' && (
                   <td>

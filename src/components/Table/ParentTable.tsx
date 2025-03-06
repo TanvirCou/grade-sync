@@ -34,7 +34,7 @@ const ParentTable = ({ data, role }: ParentTableProps) => {
                 <td className="text-xs">
                   {i.students.map((s) => s.name).join(',')}
                 </td>
-                <td className="text-xs">{i.phone}</td>
+                <td className="text-nowrap text-xs">{i.phone}</td>
                 <td className="text-xs">{i.address}</td>
                 {role === 'admin' && (
                   <td>
