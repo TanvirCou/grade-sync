@@ -65,8 +65,8 @@ const ListPageOfSubjects = async (props: { searchParams: SearchParams }) => {
 
   return (
     <div className="m-2 flex flex-1 flex-col gap-2 rounded-md bg-white px-4 py-2">
-      <div className="flex items-center justify-between">
-        <p className="hidden text-lg font-semibold md:block">All Subjects</p>
+      <div className="flex flex-col gap-y-2 md:flex-row md:items-center md:justify-between md:gap-y-0">
+        <p className="text-md font-semibold md:text-lg">All Subjects</p>
         <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
           <TableSearch />
           <div className="flex items-center justify-end gap-2 md:justify-normal">

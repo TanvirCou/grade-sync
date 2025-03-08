@@ -1,4 +1,4 @@
-import { SignOutButton } from '@clerk/nextjs';
+// import { SignOutButton } from '@clerk/nextjs';
 import { currentUser } from '@clerk/nextjs/server';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -155,12 +155,12 @@ const Sidebar = async () => {
           </ul>
         </div>
       ))}
-      <div className="-mt-1.5 flex cursor-pointer items-center justify-center gap-2 rounded-md px-1 py-1 hover:bg-sky-100 lg:justify-start">
+      {/* <div className="-mt-1.5 flex cursor-pointer items-center justify-center gap-2 rounded-md px-1 py-1 hover:bg-sky-100 lg:justify-start">
         <Image src="/logout.png" alt="logout" width={14} height={14} />
         <p className="hidden text-xs text-gray-600 lg:block">
           <SignOutButton redirectUrl="/sign-in" />
         </p>
-      </div>
+      </div> */}
     </div>
   );
 };

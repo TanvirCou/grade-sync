@@ -90,7 +90,7 @@ const ListPageOfAnnouncements = async (props: {
 
   return (
     <div className="m-2 flex flex-1 flex-col gap-2 rounded-md bg-white px-4 py-2">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-y-2 md:flex-row md:items-center md:justify-between md:gap-y-0">
         <p className="text-md font-semibold md:text-lg">All Announcements</p>
         <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
           <TableSearch />
