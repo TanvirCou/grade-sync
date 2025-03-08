@@ -177,7 +177,9 @@ const CreateModal = ({
 
       {open && (
         <div className="fixed left-0 top-0 z-40 flex h-screen w-full items-center justify-center bg-[#00000030]">
-          <div className="relative h-[90%] w-[90%] overflow-y-scroll rounded-md bg-white p-4 shadow-sm md:h-fit md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
+          <div
+            className={`relative ${table === 'teacher' || table === 'student' ? 'h-[85%]' : 'h-fit'} w-[90%] overflow-y-scroll rounded-md bg-white p-4 shadow-sm md:h-fit md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]`}
+          >
             <div
               className="absolute right-4 top-4 cursor-pointer"
               onClick={() => setOpen(false)}
