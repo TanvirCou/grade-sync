@@ -26,7 +26,7 @@ const TableSearch = () => {
         name=""
         id=""
         placeholder="Search..."
-        className="bg-transparent text-sm outline-none"
+        className="w-[95%] bg-transparent text-sm outline-none"
       />
     </form>
   );

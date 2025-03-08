@@ -29,7 +29,7 @@ const AnnouncementTable = ({ data, role, classes }: AnnouncementTableProps) => {
           {data &&
             data.map((i: AnnouncementType) => (
               <tr key={i.id} className="hover">
-                <td className="text-xs">{i.title}</td>
+                <td className="text-nowrap text-xs">{i.title}</td>
                 <td className="text-xs">{i.class?.name || '-'}</td>
                 <td className="text-xs">
                   {new Intl.DateTimeFormat('en-US').format(i.date)}

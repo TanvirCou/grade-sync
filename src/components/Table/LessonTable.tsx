@@ -49,9 +49,9 @@ const LessonTable = ({
           {data &&
             data.map((i: LessonType) => (
               <tr key={i.id} className="hover">
-                <td className="text-xs">{i.subject.name}</td>
+                <td className="text-nowrap text-xs">{i.subject.name}</td>
                 <td className="text-xs">{i.class.name}</td>
-                <td className="text-xs">
+                <td className="text-nowrap text-xs">
                   {i.teacher.name + ' ' + i.teacher.surname}
                 </td>
                 {role === 'admin' && (

@@ -39,7 +39,7 @@ const ExamTable = ({ data, role, lessons }: ExamTableProps) => {
           {data &&
             data.map((i: ExamType) => (
               <tr key={i.id} className="hover">
-                <td className="text-xs">{i.lesson.subject.name}</td>
+                <td className="text-nowrap text-xs">{i.lesson.subject.name}</td>
                 <td className="text-xs">{i.lesson.class.name}</td>
                 <td className="text-xs">{i.lesson.teacher.name}</td>
                 <td className="text-xs">

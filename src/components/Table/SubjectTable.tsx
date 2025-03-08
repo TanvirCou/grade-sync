@@ -32,7 +32,7 @@ const SubjectTable = ({ data, role, teachersData }: SubjectTableProps) => {
           {data &&
             data.map((i: SubjectType) => (
               <tr key={i.id} className="hover">
-                <td className="text-xs">{i.name}</td>
+                <td className="text-nowrap text-xs">{i.name}</td>
                 <td className="text-xs">
                   {i.teachers.map((t) => t.name).join(',')}
                 </td>

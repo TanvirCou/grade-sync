@@ -48,7 +48,7 @@ const ClassTable = ({
                 <td className="text-xs">{i.name}</td>
                 <td className="text-xs">{i.capacity}</td>
                 <td className="text-xs">{i.name[0]}</td>
-                <td className="text-xs">
+                <td className="text-nowrap text-xs">
                   {i.supervisor &&
                     i.supervisor.name + ' ' + i.supervisor.surname}
                 </td>

@@ -84,7 +84,7 @@ const AssignmentForm = ({
   return (
     <form action="" onSubmit={onSubmit}>
       <p className="text-center text-lg font-semibold">
-        {type === 'create' ? 'Create new exam' : 'Update exam'}
+        {type === 'create' ? 'Create new Assignment' : 'Update Assignment'}
       </p>
       <div
         className={`flex flex-col flex-wrap gap-y-2 md:flex-row md:items-center ${type === 'update' ? 'md:justify-between' : 'md:justify-evenly'} `}

@@ -39,7 +39,7 @@ const AssignmentTable = ({ data, role, lessons }: AssignmentTableProps) => {
           {data &&
             data.map((i: AssignmentType) => (
               <tr key={i.id} className="hover">
-                <td className="text-xs">{i.lesson.subject.name}</td>
+                <td className="text-nowrap text-xs">{i.lesson.subject.name}</td>
                 <td className="text-xs">{i.lesson.class.name}</td>
                 <td className="text-xs">{i.lesson.teacher.name}</td>
                 <td className="text-xs">
