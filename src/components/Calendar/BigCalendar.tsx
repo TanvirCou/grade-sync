@@ -1,7 +1,7 @@
 'use client';
-import React, { useState } from 'react';
-import { Calendar, momentLocalizer, View, Views } from 'react-big-calendar';
 import moment from 'moment';
+import { useState } from 'react';
+import { Calendar, momentLocalizer, View, Views } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const localizer = momentLocalizer(moment);
@@ -16,6 +16,9 @@ const BigCalendar = ({
   const handleOnChangeView = (selectedView: View) => {
     setView(selectedView);
   };
+
+  console.log(data);
+
   return (
     <Calendar
       localizer={localizer}
@@ -26,8 +29,8 @@ const BigCalendar = ({
       view={view}
       onView={handleOnChangeView}
       style={{ height: '98%' }}
-      min={new Date(2025, 1, 0, 8, 0)}
-      max={new Date(2025, 11, 0, 17, 0)}
+      min={new Date(2026, 1, 0, 8, 0)}
+      max={new Date(2026, 11, 0, 17, 0)}
     />
   );
 };

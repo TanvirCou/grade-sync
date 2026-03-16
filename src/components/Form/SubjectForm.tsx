@@ -2,7 +2,13 @@
 import { createSubject, updateSubject } from '@/lib/actions/subject.actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Teacher } from '@prisma/client';
-import React, { startTransition, useActionState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import React, {
+  startTransition,
+  useActionState,
+  useEffect,
+  useTransition,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -27,6 +33,36 @@ const subjectSchema = z.object({
 
 export type SubjectSchema = z.infer<typeof subjectSchema>;
 
+const Label = ({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
+  <label className="block text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+    {children}
+    {required && <span className="ml-0.5 text-red-500">*</span>}
+  </label>
+);
+
+const inputCls = (hasError?: boolean) =>
+  `block w-full rounded-lg border ${
+    hasError ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'
+  } px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100 placeholder:text-gray-400`;
+
+const ErrorMsg = ({ msg }: { msg?: string }) =>
+  msg ? <p className="mt-0.5 text-[10px] text-red-500">{msg}</p> : null;
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <div className="mb-3 mt-5 flex items-center gap-2">
+    <span className="text-[10px] font-bold uppercase tracking-widest text-sky-500">
+      {label}
+    </span>
+    <div className="h-px flex-1 bg-sky-100" />
+  </div>
+);
+
 const SubjectForm = ({
   data,
   type,
@@ -44,6 +80,13 @@ const SubjectForm = ({
     formState: { errors },
   } = useForm<SubjectSchema>({
     resolver: zodResolver(subjectSchema),
+    defaultValues: data
+      ? {
+          id: data.id,
+          name: data.name,
+          teachers: data.teachers.map((t) => t.id),
+        }
+      : {},
   });
 
   const [state, formAction] = useActionState(
@@ -51,88 +94,97 @@ const SubjectForm = ({
     { success: false, error: false }
   );
 
+  const [isPending, startPendingTransition] = useTransition();
+  const router = useRouter();
+
   useEffect(() => {
     if (state.success) {
       setOpen(false);
+      router.refresh();
       toast.success(
         `Subject ${type === 'create' ? 'created' : 'updated'} successfully!`
       );
     }
     if (state.error) {
-      setOpen(false);
-      toast.error('Error creating subject!');
+      toast.error(
+        `Error ${type === 'create' ? 'creating' : 'updating'} subject!`
+      );
     }
-  }, [state, setOpen, type]);
+  }, [state, setOpen, router, type]);
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-
-    startTransition(() => {
-      formAction(data);
+  const onSubmit = handleSubmit((formData) => {
+    startPendingTransition(() => {
+      startTransition(() => {
+        formAction(formData);
+      });
     });
-    // createSubject(data)
   });
 
   return (
-    <form action="" onSubmit={onSubmit}>
-      <p className="text-center text-lg font-semibold">
-        {type === 'create' ? 'Create a new subject' : 'Update a subject'}
+    <form onSubmit={onSubmit} className="px-1">
+      <p className="mb-1 text-center text-lg font-bold text-gray-800">
+        {type === 'create' ? 'New Subject' : 'Update Subject'}
       </p>
-      <div className="flex flex-col gap-y-2 md:flex-row md:items-center md:justify-evenly">
-        {data && (
-          <input
-            className={`hidden w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.name?.message && 'border-red-600'}`}
-            type="number"
-            {...register('id')}
-            defaultValue={data?.id}
-          />
-        )}
+      <p className="mb-4 text-center text-[11px] text-gray-400">
+        {type === 'create'
+          ? 'Fill in the details below'
+          : 'Edit the details below'}
+      </p>
 
-        <div className="flex flex-col gap-1 md:w-[40%]">
-          <label className="block text-xs font-medium text-gray-700">
-            Subject Name
-          </label>
+      {data && <input type="hidden" {...register('id')} />}
+
+      {/* ── Subject Details ── */}
+      <SectionHeader label="Subject Details" />
+      <div className="grid grid-cols-1 gap-3">
+        <div>
+          <Label required>Subject Name</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.name?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.name)}
             type="text"
             {...register('name')}
-            placeholder="Enter subject name"
-            defaultValue={data?.name}
+            placeholder="e.g. Mathematics"
           />
-          {errors.name && (
-            <p className="text-[10px] text-red-500">
-              {errors.name?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.name?.message} />
         </div>
 
-        <div className="flex flex-col gap-1 md:w-[40%]">
-          <label className="block text-xs font-medium text-gray-700">
-            Teachers
-          </label>
+        <div>
+          <Label>
+            Assigned Teachers{' '}
+            <span className="font-normal normal-case text-gray-400">
+              (hold Ctrl / Cmd to select multiple)
+            </span>
+          </Label>
           <select
             multiple
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.teachers?.message && 'border-red-600'}`}
+            className={`${inputCls(!!errors.teachers)} min-h-[120px]`}
             {...register('teachers')}
-            defaultValue={data && data?.teachers.map((i) => i.id)}
           >
-            {teachersData &&
-              teachersData.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.name + ' ' + teacher.surname}
-                </option>
-              ))}
+            {teachersData?.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name + ' ' + t.surname}
+              </option>
+            ))}
           </select>
-          {errors.teachers && (
-            <p className="text-[10px] text-red-500">
-              {errors.teachers?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.teachers?.message?.toString()} />
         </div>
       </div>
 
-      <button className="mt-4 w-full rounded-md bg-sky-500 py-2 text-xs font-medium text-white">
-        {type === 'create' ? 'Create' : 'Update'} Subject
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 active:scale-[0.98] disabled:opacity-60"
+      >
+        {isPending ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            {type === 'create' ? 'Creating…' : 'Updating…'}
+          </>
+        ) : type === 'create' ? (
+          'Create Subject'
+        ) : (
+          'Update Subject'
+        )}
       </button>
     </form>
   );

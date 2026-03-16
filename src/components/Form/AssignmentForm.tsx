@@ -3,9 +3,15 @@ import {
   createAssignment,
   updateAssignment,
 } from '@/lib/actions/assignment.actions';
+import { formatDateTimeLocal } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import React, { startTransition, useActionState, useEffect } from 'react';
+import React, {
+  startTransition,
+  useActionState,
+  useEffect,
+  useTransition,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -33,6 +39,36 @@ const assignmentSchema = z.object({
 
 export type AssignmentSchema = z.infer<typeof assignmentSchema>;
 
+const Label = ({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
+  <label className="block text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+    {children}
+    {required && <span className="ml-0.5 text-red-500">*</span>}
+  </label>
+);
+
+const inputCls = (hasError?: boolean) =>
+  `block w-full rounded-lg border ${
+    hasError ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'
+  } px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100 placeholder:text-gray-400`;
+
+const ErrorMsg = ({ msg }: { msg?: string }) =>
+  msg ? <p className="mt-0.5 text-[10px] text-red-500">{msg}</p> : null;
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <div className="mb-3 mt-5 flex items-center gap-2">
+    <span className="text-[10px] font-bold uppercase tracking-widest text-sky-500">
+      {label}
+    </span>
+    <div className="h-px flex-1 bg-sky-100" />
+  </div>
+);
+
 const AssignmentForm = ({
   data,
   type,
@@ -50,6 +86,19 @@ const AssignmentForm = ({
     formState: { errors },
   } = useForm<AssignmentSchema>({
     resolver: zodResolver(assignmentSchema),
+    defaultValues: data
+      ? {
+          id: data.id,
+          title: data.title,
+          startTime: data.startTime
+            ? formatDateTimeLocal(data.startTime)
+            : ('' as any),
+          dueTime: data.dueTime
+            ? formatDateTimeLocal(data.dueTime)
+            : ('' as any),
+          lessonId: data.lessonId,
+        }
+      : {},
   });
 
   const [state, formAction] = useActionState(
@@ -57,7 +106,9 @@ const AssignmentForm = ({
     { success: false, error: false }
   );
 
+  const [isPending, startPendingTransition] = useTransition();
   const router = useRouter();
+
   useEffect(() => {
     if (state.success) {
       setOpen(false);
@@ -67,118 +118,102 @@ const AssignmentForm = ({
       );
     }
     if (state.error) {
-      setOpen(false);
-      toast.error('Error creating assignment!');
+      toast.error(
+        `Error ${type === 'create' ? 'creating' : 'updating'} assignment!`
+      );
     }
   }, [state, setOpen, router, type]);
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-
-    startTransition(() => {
-      formAction(data);
+  const onSubmit = handleSubmit((formData) => {
+    startPendingTransition(() => {
+      startTransition(() => {
+        formAction(formData);
+      });
     });
-    // createSubject(data)
   });
 
   return (
-    <form action="" onSubmit={onSubmit}>
-      <p className="text-center text-lg font-semibold">
-        {type === 'create' ? 'Create new Assignment' : 'Update Assignment'}
+    <form onSubmit={onSubmit} className="px-1">
+      {/* Title */}
+      <p className="mb-1 text-center text-lg font-bold text-gray-800">
+        {type === 'create' ? 'New Assignment' : 'Update Assignment'}
       </p>
-      <div
-        className={`flex flex-col flex-wrap gap-y-2 md:flex-row md:items-center ${type === 'update' ? 'md:justify-between' : 'md:justify-evenly'} `}
-      >
-        {data && (
-          <input
-            className={`hidden w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400`}
-            type="number"
-            {...register('id')}
-            defaultValue={data?.id}
-          />
-        )}
+      <p className="mb-4 text-center text-[11px] text-gray-400">
+        {type === 'create'
+          ? 'Fill in the details below'
+          : 'Edit the details below'}
+      </p>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Assignment title
-          </label>
+      {/* Hidden id for update */}
+      {data && <input type="hidden" {...register('id')} />}
+
+      {/* ── Details ── */}
+      <SectionHeader label="Assignment Details" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Label required>Title</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.title?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.title)}
             type="text"
             {...register('title')}
-            placeholder="Enter assignment title"
-            defaultValue={data?.title}
+            placeholder="e.g. Chapter 5 Exercise"
           />
-          {errors.title && (
-            <p className="text-[10px] text-red-500">
-              {errors.title?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.title?.message} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Start Date
-          </label>
+        <div>
+          <Label required>Start Date &amp; Time</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.startTime?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.startTime)}
             type="datetime-local"
             {...register('startTime')}
-            placeholder="Enter start date & time"
-            // defaultValue={data?.startTime.toISOString()}
           />
-          {errors.startTime && (
-            <p className="text-[10px] text-red-500">
-              {errors.startTime?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.startTime?.message?.toString()} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            End Date
-          </label>
+        <div>
+          <Label required>Due Date &amp; Time</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.dueTime?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.dueTime)}
             type="datetime-local"
             {...register('dueTime')}
-            placeholder="Enter end date & time"
-            // defaultValue={data?.startTime.toLocaleString()}
           />
-          {errors.dueTime && (
-            <p className="text-[10px] text-red-500">
-              {errors.dueTime?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.dueTime?.message?.toString()} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Lessons
-          </label>
+        <div className="sm:col-span-2">
+          <Label required>Lesson</Label>
           <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.lessonId?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.lessonId)}
             {...register('lessonId')}
-            defaultValue={data && data?.lessonId}
           >
             <option value="">Select a lesson</option>
-            {lessons &&
-              lessons.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
+            {lessons?.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
           </select>
-          {errors.lessonId && (
-            <p className="text-[10px] text-red-500">
-              {errors.lessonId?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.lessonId?.message?.toString()} />
         </div>
       </div>
 
-      <button className="mt-4 w-full rounded-md bg-sky-500 py-2 text-xs font-medium text-white">
-        {type === 'create' ? 'Create' : 'Update'} Assignment
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 active:scale-[0.98] disabled:opacity-60"
+      >
+        {isPending ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            {type === 'create' ? 'Creating…' : 'Updating…'}
+          </>
+        ) : type === 'create' ? (
+          'Create Assignment'
+        ) : (
+          'Update Assignment'
+        )}
       </button>
     </form>
   );

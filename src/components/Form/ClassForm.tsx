@@ -1,7 +1,13 @@
 'use client';
 import { createClass, updateClass } from '@/lib/actions/class.actions';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { startTransition, useActionState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import React, {
+  startTransition,
+  useActionState,
+  useEffect,
+  useTransition,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -27,13 +33,43 @@ type ClassGradesProps = {
 
 const classSchema = z.object({
   id: z.coerce.number().optional(),
-  name: z.string().min(1, { message: 'Subject name is required' }),
+  name: z.string().min(1, { message: 'Class name is required' }),
   capacity: z.coerce.number().min(1, { message: 'Capacity is required' }),
   gradeId: z.coerce.number().min(1, { message: 'Grade is required' }),
   supervisorId: z.string().optional(),
 });
 
 export type ClassSchema = z.infer<typeof classSchema>;
+
+const Label = ({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
+  <label className="block text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+    {children}
+    {required && <span className="ml-0.5 text-red-500">*</span>}
+  </label>
+);
+
+const inputCls = (hasError?: boolean) =>
+  `block w-full rounded-lg border ${
+    hasError ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'
+  } px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100 placeholder:text-gray-400`;
+
+const ErrorMsg = ({ msg }: { msg?: string }) =>
+  msg ? <p className="mt-0.5 text-[10px] text-red-500">{msg}</p> : null;
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <div className="mb-3 mt-5 flex items-center gap-2">
+    <span className="text-[10px] font-bold uppercase tracking-widest text-sky-500">
+      {label}
+    </span>
+    <div className="h-px flex-1 bg-sky-100" />
+  </div>
+);
 
 const ClassForm = ({
   data,
@@ -54,6 +90,15 @@ const ClassForm = ({
     formState: { errors },
   } = useForm<ClassSchema>({
     resolver: zodResolver(classSchema),
+    defaultValues: data
+      ? {
+          id: data.id,
+          name: data.name,
+          capacity: data.capacity,
+          gradeId: data.gradeId,
+          supervisorId: String(data.supervisorId ?? ''),
+        }
+      : {},
   });
 
   const [state, formAction] = useActionState(
@@ -61,130 +106,124 @@ const ClassForm = ({
     { success: false, error: false }
   );
 
+  const [isPending, startPendingTransition] = useTransition();
+  const router = useRouter();
+
   useEffect(() => {
     if (state.success) {
       setOpen(false);
+      router.refresh();
       toast.success(
         `Class ${type === 'create' ? 'created' : 'updated'} successfully!`
       );
     }
     if (state.error) {
-      setOpen(false);
-      toast.error('Error creating class!');
+      toast.error(
+        `Error ${type === 'create' ? 'creating' : 'updating'} class!`
+      );
     }
-  }, [state, setOpen, type]);
+  }, [state, setOpen, router, type]);
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-
-    startTransition(() => {
-      formAction(data);
+  const onSubmit = handleSubmit((formData) => {
+    startPendingTransition(() => {
+      startTransition(() => {
+        formAction(formData);
+      });
     });
-    // createSubject(data)
   });
 
   return (
-    <form action="" onSubmit={onSubmit}>
-      <p className="text-center text-lg font-semibold">
-        {type === 'create' ? 'Create a new class' : 'Update the class'}
+    <form onSubmit={onSubmit} className="px-1">
+      <p className="mb-1 text-center text-lg font-bold text-gray-800">
+        {type === 'create' ? 'New Class' : 'Update Class'}
       </p>
-      <div className="mt-3 flex flex-col flex-wrap gap-y-2 md:flex-row md:items-center md:justify-between">
-        {data && (
-          <input
-            className={`hidden w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.name?.message && 'border-red-600'}`}
-            type="number"
-            {...register('id')}
-            defaultValue={data?.id}
-          />
-        )}
+      <p className="mb-4 text-center text-[11px] text-gray-400">
+        {type === 'create'
+          ? 'Fill in the details below'
+          : 'Edit the details below'}
+      </p>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Class Name
-          </label>
+      {data && <input type="hidden" {...register('id')} />}
+
+      {/* ── Class Details ── */}
+      <SectionHeader label="Class Details" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Label required>Class Name</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.name?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.name)}
             type="text"
             {...register('name')}
-            placeholder="Enter class name"
-            defaultValue={data?.name}
+            placeholder="e.g. Class 10-A"
           />
-          {errors.name && (
-            <p className="text-[10px] text-red-500">
-              {errors.name?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.name?.message} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Class Capacity
-          </label>
+        <div>
+          <Label required>Capacity</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.capacity?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.capacity)}
             type="number"
             {...register('capacity')}
-            placeholder="Enter class capacity"
-            defaultValue={data?.capacity}
+            placeholder="e.g. 30"
           />
-          {errors.capacity && (
-            <p className="text-[10px] text-red-500">
-              {errors.capacity?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.capacity?.message} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Class Grade
-          </label>
+        <div>
+          <Label required>Grade</Label>
           <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.gradeId?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.gradeId)}
             {...register('gradeId')}
-            defaultValue={data && data?.gradeId}
           >
-            <option value="">Select a class grade</option>
-            {classGrades &&
-              classGrades.map((grade) => (
-                <option key={grade.id} value={grade.id}>
-                  {grade.level}
-                </option>
-              ))}
+            <option value="">Select a grade</option>
+            {classGrades?.map((grade) => (
+              <option key={grade.id} value={grade.id}>
+                Grade {grade.level}
+              </option>
+            ))}
           </select>
-          {errors.gradeId && (
-            <p className="text-[10px] text-red-500">
-              {errors.gradeId?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.gradeId?.message} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Class Teacher
-          </label>
+        <div className="sm:col-span-2">
+          <Label>
+            Supervisor Teacher{' '}
+            <span className="font-normal normal-case text-gray-400">
+              (optional)
+            </span>
+          </Label>
           <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.supervisorId?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.supervisorId)}
             {...register('supervisorId')}
-            defaultValue={data && data?.supervisorId}
           >
-            <option value="">Select a class teacher</option>
-            {teachersData &&
-              teachersData.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.name + ' ' + teacher.surname}
-                </option>
-              ))}
+            <option value="">Select a teacher</option>
+            {teachersData?.map((teacher) => (
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.name + ' ' + teacher.surname}
+              </option>
+            ))}
           </select>
-          {errors.supervisorId && (
-            <p className="text-[10px] text-red-500">
-              {errors.supervisorId?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.supervisorId?.message} />
         </div>
       </div>
 
-      <button className="mt-4 w-full rounded-md bg-sky-500 py-2 text-xs font-medium text-white">
-        {type === 'create' ? 'Create' : 'Update'} Class
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 active:scale-[0.98] disabled:opacity-60"
+      >
+        {isPending ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            {type === 'create' ? 'Creating…' : 'Updating…'}
+          </>
+        ) : type === 'create' ? (
+          'Create Class'
+        ) : (
+          'Update Class'
+        )}
       </button>
     </form>
   );

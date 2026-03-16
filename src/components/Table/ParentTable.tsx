@@ -1,7 +1,6 @@
-import React from 'react';
+import { Parent, Student } from '@prisma/client';
 import DeleteModal from '../Form/DeleteModal';
 import UpdateModal from '../Form/UpdateModal';
-import { Parent, Student } from '@prisma/client';
 
 type ParentType = Parent & { students: Student[] };
 
@@ -28,7 +27,9 @@ const ParentTable = ({ data, role }: ParentTableProps) => {
             data.map((i: ParentType) => (
               <tr key={i.id} className="hover">
                 <td>
-                  <p className="text-xs font-medium">{i.name}</p>
+                  <p className="text-xs font-medium">
+                    {i.name + ' ' + i.surname}
+                  </p>
                   <p className="text-[10px] text-gray-500">{i.email}</p>
                 </td>
                 <td className="text-xs">

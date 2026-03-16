@@ -7,6 +7,7 @@ import React, {
   useActionState,
   useEffect,
   useState,
+  useTransition,
 } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -21,28 +22,49 @@ type DataProps = {
   studentId: string;
 };
 
-type ExamProps = {
-  id: number;
-  title: string;
-};
-
-type AssignmentProps = {
-  id: number;
-  title: string;
-};
+type ExamProps = { id: number; title: string };
+type AssignmentProps = { id: number; title: string };
 
 const resultSchema = z.object({
   id: z.coerce.number().optional(),
-  score: z.coerce.number({ message: 'Results score is required' }),
-  resultType: z.enum(['EXAM', 'ASSIGNMENT'], {
-    message: 'This selection is required',
-  }),
+  score: z.coerce.number({ message: 'Score is required' }),
+  resultType: z.enum(['EXAM', 'ASSIGNMENT'], { message: 'Type is required' }),
   examId: z.coerce.number().optional(),
   assignmentId: z.coerce.number().optional(),
   studentId: z.string({ message: 'Student is required' }),
 });
 
 export type ResultSchema = z.infer<typeof resultSchema>;
+
+const Label = ({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
+  <label className="block text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+    {children}
+    {required && <span className="ml-0.5 text-red-500">*</span>}
+  </label>
+);
+
+const inputCls = (hasError?: boolean) =>
+  `block w-full rounded-lg border ${
+    hasError ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'
+  } px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100 placeholder:text-gray-400`;
+
+const ErrorMsg = ({ msg }: { msg?: string }) =>
+  msg ? <p className="mt-0.5 text-[10px] text-red-500">{msg}</p> : null;
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <div className="mb-3 mt-5 flex items-center gap-2">
+    <span className="text-[10px] font-bold uppercase tracking-widest text-sky-500">
+      {label}
+    </span>
+    <div className="h-px flex-1 bg-sky-100" />
+  </div>
+);
 
 const ResultForm = ({
   data,
@@ -63,14 +85,27 @@ const ResultForm = ({
     formState: { errors },
   } = useForm<ResultSchema>({
     resolver: zodResolver(resultSchema),
+    defaultValues: data
+      ? {
+          id: data.id,
+          score: data.score,
+          resultType: data.resultType,
+          examId: data.examId,
+          assignmentId: data.assignmentId,
+          studentId: data.studentId,
+        }
+      : {},
   });
 
   const [state, formAction] = useActionState(
     type === 'create' ? createResult : updateResult,
     { success: false, error: false }
   );
-  const [resType, setResType] = useState(data ? data.resultType : '');
+
+  const [resType, setResType] = useState<string>(data ? data.resultType : '');
+  const [isPending, startPendingTransition] = useTransition();
   const router = useRouter();
+
   useEffect(() => {
     if (state.success) {
       setOpen(false);
@@ -80,152 +115,126 @@ const ResultForm = ({
       );
     }
     if (state.error) {
-      setOpen(false);
-      toast.error('Error creating result!');
+      toast.error(
+        `Error ${type === 'create' ? 'creating' : 'updating'} result!`
+      );
     }
   }, [state, setOpen, router, type]);
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-
-    startTransition(() => {
-      formAction(data);
+  const onSubmit = handleSubmit((formData) => {
+    startPendingTransition(() => {
+      startTransition(() => {
+        formAction(formData);
+      });
     });
-    // createSubject(data)
   });
 
-  console.log(resType);
-
   return (
-    <form action="" onSubmit={onSubmit}>
-      <p className="text-center text-lg font-semibold">
-        {type === 'create' ? 'Create new Result' : 'Update Result'}
+    <form onSubmit={onSubmit} className="px-1">
+      <p className="mb-1 text-center text-lg font-bold text-gray-800">
+        {type === 'create' ? 'New Result' : 'Update Result'}
       </p>
-      <div
-        className={`flex flex-col flex-wrap gap-y-2 md:flex-row md:items-center ${type === 'update' ? 'md:justify-between' : 'md:justify-evenly'} `}
-      >
-        {data && (
-          <input
-            className={`hidden w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400`}
-            type="number"
-            {...register('id')}
-            defaultValue={data?.id}
-          />
-        )}
+      <p className="mb-4 text-center text-[11px] text-gray-400">
+        {type === 'create'
+          ? 'Fill in the details below'
+          : 'Edit the details below'}
+      </p>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Student Id
-          </label>
+      {data && <input type="hidden" {...register('id')} />}
+
+      {/* ── Result Details ── */}
+      <SectionHeader label="Result Details" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <Label required>Student ID</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.studentId?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.studentId)}
             type="text"
             {...register('studentId')}
-            placeholder="Enter student Id"
-            defaultValue={data?.studentId}
+            placeholder="Enter student ID"
           />
-          {errors.studentId && (
-            <p className="text-[10px] text-red-500">
-              {errors.studentId?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.studentId?.message?.toString()} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Result Type
-          </label>
+        <div>
+          <Label required>Score</Label>
+          <input
+            className={inputCls(!!errors.score)}
+            type="number"
+            {...register('score')}
+            placeholder="e.g. 85"
+          />
+          <ErrorMsg msg={errors.score?.message?.toString()} />
+        </div>
+
+        <div className="sm:col-span-2">
+          <Label required>Result Type</Label>
           <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.resultType?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.resultType)}
             {...register('resultType')}
             value={resType}
             onChange={(e) => setResType(e.target.value)}
-            // value={data && data.examId ? "exam" : "assignment"}
           >
             <option value="">Select a type</option>
             <option value="ASSIGNMENT">Assignment</option>
             <option value="EXAM">Exam</option>
           </select>
-          {errors.resultType && (
-            <p className="text-[10px] text-red-500">
-              {errors.resultType?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.resultType?.message?.toString()} />
         </div>
 
         {resType === 'ASSIGNMENT' && (
-          <div className="flex flex-col gap-1">
-            <label className="block text-xs font-medium text-gray-700">
-              Assignment
-            </label>
+          <div className="sm:col-span-2">
+            <Label required>Assignment</Label>
             <select
-              className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.assignmentId?.message && 'border-red-600'}`}
+              className={inputCls(!!errors.assignmentId)}
               {...register('assignmentId')}
-              // defaultValue={data && data?.assignmentId}
             >
               <option value="">Select assignment</option>
-              {assignments &&
-                assignments.map((i, index) => (
-                  <option key={index} value={i?.id}>
-                    {i?.title}
-                  </option>
-                ))}
+              {assignments?.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.title}
+                </option>
+              ))}
             </select>
-            {errors.assignmentId && (
-              <p className="text-[10px] text-red-500">
-                {errors.assignmentId?.message?.toString()}
-              </p>
-            )}
+            <ErrorMsg msg={errors.assignmentId?.message?.toString()} />
           </div>
         )}
 
         {resType === 'EXAM' && (
-          <div className="flex flex-col gap-1">
-            <label className="block text-xs font-medium text-gray-700">
-              Exam
-            </label>
+          <div className="sm:col-span-2">
+            <Label required>Exam</Label>
             <select
-              className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.examId?.message && 'border-red-600'}`}
+              className={inputCls(!!errors.examId)}
               {...register('examId')}
-              // defaultValue={data && data?.examId}
             >
               <option value="">Select exam</option>
-              {exams &&
-                exams.map((i, index) => (
-                  <option key={index} value={i?.id}>
-                    {i?.title}
-                  </option>
-                ))}
+              {exams?.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.title}
+                </option>
+              ))}
             </select>
-            {errors.examId && (
-              <p className="text-[10px] text-red-500">
-                {errors.examId?.message?.toString()}
-              </p>
-            )}
+            <ErrorMsg msg={errors.examId?.message?.toString()} />
           </div>
         )}
-
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Result Score
-          </label>
-          <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.score?.message && 'border-red-600'}`}
-            type="number"
-            {...register('score')}
-            placeholder="Enter result score"
-            defaultValue={data?.score}
-          />
-          {errors.score && (
-            <p className="text-[10px] text-red-500">
-              {errors.score?.message?.toString()}
-            </p>
-          )}
-        </div>
       </div>
 
-      <button className="mt-4 w-full rounded-md bg-sky-500 py-2 text-xs font-medium text-white">
-        {type === 'create' ? 'Create' : 'Update'} Result
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 active:scale-[0.98] disabled:opacity-60"
+      >
+        {isPending ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            {type === 'create' ? 'Creating…' : 'Updating…'}
+          </>
+        ) : type === 'create' ? (
+          'Create Result'
+        ) : (
+          'Update Result'
+        )}
       </button>
     </form>
   );

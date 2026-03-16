@@ -1,8 +1,8 @@
 'use server';
 
-import { prisma } from '../prisma';
-import { clerkClient } from '@clerk/nextjs/server';
 import { ParentSchema } from '@/components/Form/ParentForm';
+import { clerkClient } from '@clerk/nextjs/server';
+import { prisma } from '../prisma';
 
 type CurrentState = { success: boolean; error: boolean };
 
@@ -11,7 +11,9 @@ export const createParent = async (
   data: ParentSchema
 ) => {
   try {
-    const childrens = data.studentsId.split(',');
+    const childrens = data.studentsId
+      ? data.studentsId.split(',').filter((id) => id.trim() !== '')
+      : [];
     const client = await clerkClient();
 
     const user = await client.users.createUser({
@@ -31,21 +33,19 @@ export const createParent = async (
         email: data.email,
         phone: data.phone,
         address: data.address,
-        students: {
-          connect: childrens.map((i) => ({ id: i })),
-        },
+        ...(childrens.length > 0 && {
+          students: {
+            connect: childrens.map((i) => ({ id: i })),
+          },
+        }),
       },
     });
 
-    // revalidatePath("/list/teachers")
+    // revalidatePath("/list/parents")
     return { success: true, error: false };
-  } catch (err) {
-    console.log(err);
+  } catch (err: any) {
+    console.log('Create Parent Error:', err.errors || err);
     return { success: false, error: true };
-
-    // const errorMessage = err && err?.errors?.map((e: any) => e.message)
-    // console.log(err?.errors?.map((e: any) => e.message));
-    // return {success: false, error: true, message: errorMessage && errorMessage}
   }
 };
 
@@ -55,7 +55,9 @@ export const updateParent = async (
 ) => {
   if (!data.id) return { success: false, error: true };
   try {
-    const childrens = data.studentsId.split(',');
+    const childrens = data.studentsId
+      ? data.studentsId.split(',').filter((id) => id.trim() !== '')
+      : [];
 
     const client = await clerkClient();
 
@@ -78,16 +80,18 @@ export const updateParent = async (
         email: data.email,
         phone: data.phone,
         address: data.address,
-        students: {
-          set: childrens?.map((i) => ({ id: i })),
-        },
+        ...(childrens.length > 0 && {
+          students: {
+            set: childrens.map((i) => ({ id: i })),
+          },
+        }),
       },
     });
 
-    // revalidatePath("/list/teachers")
+    // revalidatePath("/list/parents")
     return { success: true, error: false };
   } catch (err) {
-    console.log(JSON.stringify(err)); //same name error problem
+    console.log('Update Parent Error:', JSON.stringify(err));
     return { success: false, error: true };
   }
 };

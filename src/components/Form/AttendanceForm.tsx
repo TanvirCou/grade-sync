@@ -5,7 +5,12 @@ import {
 } from '@/lib/actions/attendance.actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import React, { startTransition, useActionState, useEffect } from 'react';
+import React, {
+  startTransition,
+  useActionState,
+  useEffect,
+  useTransition,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -25,7 +30,7 @@ type LessonsProps = {
 
 const attendanceSchema = z.object({
   id: z.coerce.number().optional(),
-  date: z.coerce.date({ message: 'Start time is required' }),
+  date: z.coerce.date({ message: 'Date is required' }),
   attendanceStatus: z.enum(['PRESENT', 'ABSENT'], {
     message: 'Attendance Status is required!',
   }),
@@ -34,6 +39,36 @@ const attendanceSchema = z.object({
 });
 
 export type AttendanceSchema = z.infer<typeof attendanceSchema>;
+
+const Label = ({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
+  <label className="block text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+    {children}
+    {required && <span className="ml-0.5 text-red-500">*</span>}
+  </label>
+);
+
+const inputCls = (hasError?: boolean) =>
+  `block w-full rounded-lg border ${
+    hasError ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'
+  } px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100 placeholder:text-gray-400`;
+
+const ErrorMsg = ({ msg }: { msg?: string }) =>
+  msg ? <p className="mt-0.5 text-[10px] text-red-500">{msg}</p> : null;
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <div className="mb-3 mt-5 flex items-center gap-2">
+    <span className="text-[10px] font-bold uppercase tracking-widest text-sky-500">
+      {label}
+    </span>
+    <div className="h-px flex-1 bg-sky-100" />
+  </div>
+);
 
 const AttendanceForm = ({
   data,
@@ -52,6 +87,15 @@ const AttendanceForm = ({
     formState: { errors },
   } = useForm<AttendanceSchema>({
     resolver: zodResolver(attendanceSchema),
+    defaultValues: data
+      ? {
+          id: data.id,
+          date: data.date.toISOString().split('T')[0] as any,
+          attendanceStatus: data.present ? 'PRESENT' : 'ABSENT',
+          lessonId: data.lessonId,
+          studentId: data.studentId,
+        }
+      : {},
   });
 
   const [state, formAction] = useActionState(
@@ -59,7 +103,9 @@ const AttendanceForm = ({
     { success: false, error: false }
   );
 
+  const [isPending, startPendingTransition] = useTransition();
   const router = useRouter();
+
   useEffect(() => {
     if (state.success) {
       setOpen(false);
@@ -69,120 +115,104 @@ const AttendanceForm = ({
       );
     }
     if (state.error) {
-      setOpen(false);
-      toast.error('Error creating attendance!');
+      toast.error(
+        `Error ${type === 'create' ? 'creating' : 'updating'} attendance!`
+      );
     }
   }, [state, setOpen, router, type]);
 
-  const onSubmit = handleSubmit((data) => {
-    console.log('Hey');
-
-    startTransition(() => {
-      formAction(data);
+  const onSubmit = handleSubmit((formData) => {
+    startPendingTransition(() => {
+      startTransition(() => {
+        formAction(formData);
+      });
     });
   });
 
-  // console.log(data);
-
   return (
-    <form action="" onSubmit={onSubmit}>
-      <p className="text-center text-lg font-semibold">
-        {type === 'create' ? 'Create new Attendance' : 'Update Attendance'}
+    <form onSubmit={onSubmit} className="px-1">
+      {/* Title */}
+      <p className="mb-1 text-center text-lg font-bold text-gray-800">
+        {type === 'create' ? 'Record Attendance' : 'Update Attendance'}
       </p>
-      <div
-        className={`flex flex-col flex-wrap gap-y-2 md:flex-row md:items-center md:justify-between`}
-      >
-        {data && (
-          <input
-            className={`hidden w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400`}
-            type="number"
-            {...register('id')}
-            defaultValue={data?.id}
-          />
-        )}
+      <p className="mb-4 text-center text-[11px] text-gray-400">
+        {type === 'create'
+          ? 'Fill in the details below'
+          : 'Edit the details below'}
+      </p>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Date
-          </label>
+      {/* Hidden id for update */}
+      {data && <input type="hidden" {...register('id')} />}
+
+      {/* ── Details ── */}
+      <SectionHeader label="Attendance Details" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <Label required>Date</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.date?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.date)}
             type="date"
             {...register('date')}
-            placeholder="Enter date"
-            defaultValue={data?.date.toISOString().split('T')[0]}
           />
-          {errors.date && (
-            <p className="text-[10px] text-red-500">
-              {errors.date?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.date?.message?.toString()} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Student Id
-          </label>
+        <div>
+          <Label required>Attendance Status</Label>
+          <select
+            className={inputCls(!!errors.attendanceStatus)}
+            {...register('attendanceStatus')}
+          >
+            <option value="PRESENT">Present</option>
+            <option value="ABSENT">Absent</option>
+          </select>
+          <ErrorMsg msg={errors.attendanceStatus?.message?.toString()} />
+        </div>
+
+        <div>
+          <Label required>Student ID</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.studentId?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.studentId)}
             type="text"
             {...register('studentId')}
-            placeholder="Enter student Id"
-            defaultValue={data?.studentId}
+            placeholder="Enter student ID"
           />
-          {errors.studentId && (
-            <p className="text-[10px] text-red-500">
-              {errors.studentId?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.studentId?.message?.toString()} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Lessons
-          </label>
+        <div>
+          <Label required>Lesson</Label>
           <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.lessonId?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.lessonId)}
             {...register('lessonId')}
-            defaultValue={data && data?.lessonId}
           >
             <option value="">Select a lesson</option>
-            {lessons &&
-              lessons.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
+            {lessons?.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
           </select>
-          {errors.lessonId && (
-            <p className="text-[10px] text-red-500">
-              {errors.lessonId?.message?.toString()}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Attendance Status
-          </label>
-          <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.attendanceStatus?.message && 'border-red-600'}`}
-            {...register('attendanceStatus')}
-            defaultValue={data && data.present ? 'PRESENT' : 'ABSENT'}
-          >
-            <option value="ABSENT">Absent</option>
-            <option value="PRESENT">Present</option>
-          </select>
-          {errors.attendanceStatus && (
-            <p className="text-[10px] text-red-500">
-              {errors.attendanceStatus?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.lessonId?.message?.toString()} />
         </div>
       </div>
 
-      <button className="mt-4 w-full rounded-md bg-sky-500 py-2 text-xs font-medium text-white">
-        {type === 'create' ? 'Create' : 'Update'} Attendance
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 active:scale-[0.98] disabled:opacity-60"
+      >
+        {isPending ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            {type === 'create' ? 'Saving…' : 'Updating…'}
+          </>
+        ) : type === 'create' ? (
+          'Save Attendance'
+        ) : (
+          'Update Attendance'
+        )}
       </button>
     </form>
   );

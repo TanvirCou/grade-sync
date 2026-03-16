@@ -7,6 +7,10 @@
   min-height: 80px !important;
 }
 
+.rbc-day-slot .rbc-events-container {
+  margin-right: 0px !important;
+}
+
 .react-calendar {
   width: 100% !important;
   border: none !important;
@@ -77,7 +81,6 @@
   border: none !important;
   color: black !important;
   padding: 10px !important;
-  margin: 10px !important;
   width: 99% !important;
 }
 

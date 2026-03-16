@@ -1,8 +1,14 @@
 'use client';
 import { createLesson, updateLesson } from '@/lib/actions/lesson.actions';
+import { formatDateTimeLocal } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import React, { startTransition, useActionState, useEffect } from 'react';
+import React, {
+  startTransition,
+  useActionState,
+  useEffect,
+  useTransition,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -19,21 +25,12 @@ type DataProps = {
 };
 
 type ClassProps = { name: string; id: number };
-
-type SubjectsProps = {
-  id: number;
-  name: string;
-};
-
-type TeachersDataProps = {
-  name: string;
-  id: string;
-  surname: string;
-};
+type SubjectsProps = { id: number; name: string };
+type TeachersDataProps = { name: string; id: string; surname: string };
 
 const lessonSchema = z.object({
   id: z.coerce.number().optional(),
-  name: z.string().min(1, { message: 'name is required' }),
+  name: z.string().min(1, { message: 'Lesson name is required' }),
   day: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'], {
     message: 'Day is required!',
   }),
@@ -41,10 +38,40 @@ const lessonSchema = z.object({
   endTime: z.coerce.date({ message: 'End time is required' }),
   subjectId: z.coerce.number({ message: 'Subject is required' }),
   classId: z.coerce.number({ message: 'Class is required' }),
-  teacherId: z.string({ message: 'Class is required' }),
+  teacherId: z.string({ message: 'Teacher is required' }),
 });
 
 export type LessonSchema = z.infer<typeof lessonSchema>;
+
+const Label = ({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
+  <label className="block text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+    {children}
+    {required && <span className="ml-0.5 text-red-500">*</span>}
+  </label>
+);
+
+const inputCls = (hasError?: boolean) =>
+  `block w-full rounded-lg border ${
+    hasError ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'
+  } px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100 placeholder:text-gray-400`;
+
+const ErrorMsg = ({ msg }: { msg?: string }) =>
+  msg ? <p className="mt-0.5 text-[10px] text-red-500">{msg}</p> : null;
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <div className="mb-3 mt-5 flex items-center gap-2">
+    <span className="text-[10px] font-bold uppercase tracking-widest text-sky-500">
+      {label}
+    </span>
+    <div className="h-px flex-1 bg-sky-100" />
+  </div>
+);
 
 const LessonForm = ({
   data,
@@ -67,6 +94,22 @@ const LessonForm = ({
     formState: { errors },
   } = useForm<LessonSchema>({
     resolver: zodResolver(lessonSchema),
+    defaultValues: data
+      ? {
+          id: data.id,
+          name: data.name,
+          day: data.day as any,
+          startTime: data.startTime
+            ? formatDateTimeLocal(data.startTime)
+            : ('' as any),
+          endTime: data.endTime
+            ? formatDateTimeLocal(data.endTime)
+            : ('' as any),
+          classId: data.classId,
+          subjectId: data.subjectId,
+          teacherId: data.teacherId,
+        }
+      : {},
   });
 
   const [state, formAction] = useActionState(
@@ -74,7 +117,9 @@ const LessonForm = ({
     { success: false, error: false }
   );
 
+  const [isPending, startPendingTransition] = useTransition();
   const router = useRouter();
+
   useEffect(() => {
     if (state.success) {
       setOpen(false);
@@ -84,64 +129,50 @@ const LessonForm = ({
       );
     }
     if (state.error) {
-      setOpen(false);
-      toast.error('Error creating Lesson!');
+      toast.error(
+        `Error ${type === 'create' ? 'creating' : 'updating'} lesson!`
+      );
     }
   }, [state, setOpen, router, type]);
 
-  const onSubmit = handleSubmit((data) => {
-    // console.log(data);
-
-    startTransition(() => {
-      formAction(data);
+  const onSubmit = handleSubmit((formData) => {
+    startPendingTransition(() => {
+      startTransition(() => {
+        formAction(formData);
+      });
     });
-    // createSubject(data)
   });
 
   return (
-    <form action="" onSubmit={onSubmit}>
-      <p className="text-center text-lg font-semibold">
-        {type === 'create' ? 'Create new Lesson' : 'Update Lesson'}
+    <form onSubmit={onSubmit} className="px-1">
+      <p className="mb-1 text-center text-lg font-bold text-gray-800">
+        {type === 'create' ? 'New Lesson' : 'Update Lesson'}
       </p>
-      <div
-        className={`flex flex-col flex-wrap gap-y-2 md:flex-row md:items-center md:justify-between`}
-      >
-        {data && (
-          <input
-            className={`hidden w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400`}
-            type="number"
-            {...register('id')}
-            defaultValue={data?.id}
-          />
-        )}
+      <p className="mb-4 text-center text-[11px] text-gray-400">
+        {type === 'create'
+          ? 'Fill in the details below'
+          : 'Edit the details below'}
+      </p>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Lesson name
-          </label>
+      {data && <input type="hidden" {...register('id')} />}
+
+      {/* ── Lesson Details ── */}
+      <SectionHeader label="Lesson Details" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Label required>Lesson Name</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.name?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.name)}
             type="text"
             {...register('name')}
-            placeholder="Enter lesson name"
-            defaultValue={data?.name}
+            placeholder="e.g. Introduction to Algebra"
           />
-          {errors.name && (
-            <p className="text-[10px] text-red-500">
-              {errors.name?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.name?.message} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Day
-          </label>
-          <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.day?.message && 'border-red-600'}`}
-            {...register('day')}
-            value={data && data.day}
-          >
+        <div>
+          <Label required>Day</Label>
+          <select className={inputCls(!!errors.day)} {...register('day')}>
             <option value="">Select a day</option>
             <option value="MONDAY">Monday</option>
             <option value="TUESDAY">Tuesday</option>
@@ -149,124 +180,94 @@ const LessonForm = ({
             <option value="THURSDAY">Thursday</option>
             <option value="FRIDAY">Friday</option>
           </select>
-          {errors.day && (
-            <p className="text-[10px] text-red-500">
-              {errors.day?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.day?.message} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Start Date
-          </label>
-          <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.startTime?.message && 'border-red-600'}`}
-            type="datetime-local"
-            {...register('startTime')}
-            placeholder="Enter start date & time"
-            // defaultValue={data?.startTime.toISOString()}
-          />
-          {errors.startTime && (
-            <p className="text-[10px] text-red-500">
-              {errors.startTime?.message?.toString()}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            End Date
-          </label>
-          <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.endTime?.message && 'border-red-600'}`}
-            type="datetime-local"
-            {...register('endTime')}
-            placeholder="Enter end date & time"
-            // defaultValue={data?.startTime.toLocaleString()}
-          />
-          {errors.endTime && (
-            <p className="text-[10px] text-red-500">
-              {errors.endTime?.message?.toString()}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Class
-          </label>
+        <div>
+          <Label required>Subject</Label>
           <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.classId?.message && 'border-red-600'}`}
-            {...register('classId')}
-            defaultValue={data && data?.classId}
-          >
-            <option value="">Select a class</option>
-            {classes &&
-              classes.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
-          </select>
-          {errors.classId && (
-            <p className="text-[10px] text-red-500">
-              {errors.classId?.message?.toString()}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Subject
-          </label>
-          <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.subjectId?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.subjectId)}
             {...register('subjectId')}
-            defaultValue={data && data?.subjectId}
           >
             <option value="">Select a subject</option>
-            {subjects &&
-              subjects.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
+            {subjects?.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
           </select>
-          {errors.subjectId && (
-            <p className="text-[10px] text-red-500">
-              {errors.subjectId?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.subjectId?.message?.toString()} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Teacher
-          </label>
+        <div>
+          <Label required>Start Date &amp; Time</Label>
+          <input
+            className={inputCls(!!errors.startTime)}
+            type="datetime-local"
+            {...register('startTime')}
+          />
+          <ErrorMsg msg={errors.startTime?.message?.toString()} />
+        </div>
+
+        <div>
+          <Label required>End Date &amp; Time</Label>
+          <input
+            className={inputCls(!!errors.endTime)}
+            type="datetime-local"
+            {...register('endTime')}
+          />
+          <ErrorMsg msg={errors.endTime?.message?.toString()} />
+        </div>
+
+        <div>
+          <Label required>Class</Label>
           <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.teacherId?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.classId)}
+            {...register('classId')}
+          >
+            <option value="">Select a class</option>
+            {classes?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <ErrorMsg msg={errors.classId?.message?.toString()} />
+        </div>
+
+        <div>
+          <Label required>Teacher</Label>
+          <select
+            className={inputCls(!!errors.teacherId)}
             {...register('teacherId')}
-            defaultValue={data && data?.subjectId}
           >
             <option value="">Select a teacher</option>
-            {teachersData &&
-              teachersData.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name + ' ' + i.surname}
-                </option>
-              ))}
+            {teachersData?.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name + ' ' + t.surname}
+              </option>
+            ))}
           </select>
-          {errors.teacherId && (
-            <p className="text-[10px] text-red-500">
-              {errors.teacherId?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.teacherId?.message?.toString()} />
         </div>
       </div>
 
-      <button className="mt-4 w-full rounded-md bg-sky-500 py-2 text-xs font-medium text-white">
-        {type === 'create' ? 'Create' : 'Update'} Lesson
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 active:scale-[0.98] disabled:opacity-60"
+      >
+        {isPending ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            {type === 'create' ? 'Creating…' : 'Updating…'}
+          </>
+        ) : type === 'create' ? (
+          'Create Lesson'
+        ) : (
+          'Update Lesson'
+        )}
       </button>
     </form>
   );

@@ -2,7 +2,6 @@
 import { currentUser } from '@clerk/nextjs/server';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
 
 const Sidebar = async () => {
   const session = await currentUser();
@@ -84,12 +83,12 @@ const Sidebar = async () => {
           href: '/list/events',
           visible: ['admin', 'teacher', 'student', 'parent'],
         },
-        {
-          icon: '/message.png',
-          label: 'Messages',
-          href: '/list/messages',
-          visible: ['admin', 'teacher', 'student', 'parent'],
-        },
+        // {
+        //   icon: '/message.png',
+        //   label: 'Messages',
+        //   href: '/list/messages',
+        //   visible: ['admin', 'teacher', 'student', 'parent'],
+        // },
         {
           icon: '/announcement.png',
           label: 'Announcements',

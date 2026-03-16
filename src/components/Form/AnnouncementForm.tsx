@@ -5,7 +5,12 @@ import {
 } from '@/lib/actions/announcement.actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import React, { startTransition, useActionState, useEffect } from 'react';
+import React, {
+  startTransition,
+  useActionState,
+  useEffect,
+  useTransition,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -30,6 +35,36 @@ const announcementSchema = z.object({
 
 export type AnnouncementSchema = z.infer<typeof announcementSchema>;
 
+const Label = ({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
+  <label className="block text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+    {children}
+    {required && <span className="ml-0.5 text-red-500">*</span>}
+  </label>
+);
+
+const inputCls = (hasError?: boolean) =>
+  `block w-full rounded-lg border ${
+    hasError ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'
+  } px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100 placeholder:text-gray-400`;
+
+const ErrorMsg = ({ msg }: { msg?: string }) =>
+  msg ? <p className="mt-0.5 text-[10px] text-red-500">{msg}</p> : null;
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <div className="mb-3 mt-5 flex items-center gap-2">
+    <span className="text-[10px] font-bold uppercase tracking-widest text-sky-500">
+      {label}
+    </span>
+    <div className="h-px flex-1 bg-sky-100" />
+  </div>
+);
+
 const AnnouncementForm = ({
   data,
   type,
@@ -47,6 +82,15 @@ const AnnouncementForm = ({
     formState: { errors },
   } = useForm<AnnouncementSchema>({
     resolver: zodResolver(announcementSchema),
+    defaultValues: data
+      ? {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          date: data.date.toISOString().split('T')[0] as any,
+          classId: data.classId,
+        }
+      : {},
   });
 
   const [state, formAction] = useActionState(
@@ -54,7 +98,9 @@ const AnnouncementForm = ({
     { success: false, error: false }
   );
 
+  const [isPending, startPendingTransition] = useTransition();
   const router = useRouter();
+
   useEffect(() => {
     if (state.success) {
       setOpen(false);
@@ -64,119 +110,108 @@ const AnnouncementForm = ({
       );
     }
     if (state.error) {
-      setOpen(false);
-      toast.error('Error creating announcement!');
+      toast.error(
+        `Error ${type === 'create' ? 'creating' : 'updating'} announcement!`
+      );
     }
   }, [state, setOpen, router, type]);
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-
-    startTransition(() => {
-      formAction(data);
+  const onSubmit = handleSubmit((formData) => {
+    startPendingTransition(() => {
+      startTransition(() => {
+        formAction(formData);
+      });
     });
-    // createSubject(data)
   });
 
-  console.log(data);
-
   return (
-    <form action="" onSubmit={onSubmit}>
-      <p className="text-center text-lg font-semibold">
-        {type === 'create' ? 'Create new Announcement' : 'Update Announcement'}
+    <form onSubmit={onSubmit} className="px-1">
+      {/* Title */}
+      <p className="mb-1 text-center text-lg font-bold text-gray-800">
+        {type === 'create' ? 'New Announcement' : 'Update Announcement'}
       </p>
-      <div
-        className={`flex flex-col flex-wrap gap-y-2 md:flex-row md:items-center md:justify-between`}
-      >
-        {data && (
-          <input
-            className={`hidden w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400`}
-            type="number"
-            {...register('id')}
-            defaultValue={data?.id}
-          />
-        )}
+      <p className="mb-4 text-center text-[11px] text-gray-400">
+        {type === 'create'
+          ? 'Fill in the details below'
+          : 'Edit the details below'}
+      </p>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Announcement title
-          </label>
+      {/* Hidden id for update */}
+      {data && <input type="hidden" {...register('id')} />}
+
+      {/* ── Details ── */}
+      <SectionHeader label="Announcement Details" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Label required>Title</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.title?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.title)}
             type="text"
             {...register('title')}
-            placeholder="Enter announcement title"
-            defaultValue={data?.title}
+            placeholder="e.g. School closed on Monday"
           />
-          {errors.title && (
-            <p className="text-[10px] text-red-500">
-              {errors.title?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.title?.message} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Announcement Date
-          </label>
+        <div>
+          <Label required>Date</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.date?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.date)}
             type="date"
             {...register('date')}
-            placeholder="Enter start date & time"
-            defaultValue={data?.date.toISOString().split('T')[0]}
           />
-          {errors.date && (
-            <p className="text-[10px] text-red-500">
-              {errors.date?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.date?.message?.toString()} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Class
-          </label>
+        <div>
+          <Label>
+            Class{' '}
+            <span className="font-normal normal-case text-gray-400">
+              (optional — blank = all)
+            </span>
+          </Label>
           <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.classId?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.classId)}
             {...register('classId')}
-            defaultValue={data && data?.classId}
           >
-            <option value="">General</option>
-            {classes &&
-              classes.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
+            <option value="">General (All Classes)</option>
+            {classes?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
-          {errors.classId && (
-            <p className="text-[10px] text-red-500">
-              {errors.classId?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.classId?.message?.toString()} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Announcement description
-          </label>
+        <div className="sm:col-span-2">
+          <Label required>Description</Label>
           <textarea
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.description?.message && 'border-red-600'}`}
+            className={`${inputCls(!!errors.description)} resize-none`}
+            rows={4}
             {...register('description')}
-            placeholder="Enter announcement description"
-            defaultValue={data?.description}
+            placeholder="Enter announcement description…"
           />
-          {errors.description && (
-            <p className="text-[10px] text-red-500">
-              {errors.description?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.description?.message} />
         </div>
       </div>
 
-      <button className="mt-4 w-full rounded-md bg-sky-500 py-2 text-xs font-medium text-white">
-        {type === 'create' ? 'Create' : 'Update'} Announcement
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 active:scale-[0.98] disabled:opacity-60"
+      >
+        {isPending ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            {type === 'create' ? 'Creating…' : 'Updating…'}
+          </>
+        ) : type === 'create' ? (
+          'Create Announcement'
+        ) : (
+          'Update Announcement'
+        )}
       </button>
     </form>
   );

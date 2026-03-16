@@ -1,8 +1,7 @@
-import Image from 'next/image';
-import React from 'react';
-import DeleteModal from '../Form/DeleteModal';
 import { Class, Subject, Teacher } from '@prisma/client';
+import Image from 'next/image';
 import Link from 'next/link';
+import DeleteModal from '../Form/DeleteModal';
 
 type TeacherType = Teacher & { subjects: Subject[] } & { classes: Class[] };
 
@@ -45,13 +44,15 @@ const TeacherTable = ({ data, role }: TeacherTableProps) => {
                     className="hidden h-8 w-8 rounded-full object-cover md:block"
                   />
                   <div>
-                    <p className="text-xs font-medium">{i.name}</p>
+                    <p className="text-xs font-medium">
+                      {i.name + ' ' + i.surname}
+                    </p>
                     <p className="text-[10px] text-gray-500">{i.email}</p>
                   </div>
                 </td>
                 <td className="text-xs">{i.username}</td>
                 <td className="text-xs">
-                  {i.subjects.map((i) => i.name).join("'")}
+                  {i.subjects.map((i) => i.name).join(', ')}
                 </td>
                 <td className="text-xs">
                   {i.classes.map((i) => i.name).join(',')}

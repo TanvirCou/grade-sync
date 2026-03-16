@@ -1,8 +1,8 @@
 'use server';
 
 import { TeacherSchema } from '@/components/Form/TeacherForm';
-import { prisma } from '../prisma';
 import { clerkClient } from '@clerk/nextjs/server';
+import { prisma } from '../prisma';
 
 type CurrentState = { success: boolean; error: boolean };
 
@@ -92,7 +92,7 @@ export const updateTeacher = async (
     // revalidatePath("/list/teachers")
     return { success: true, error: false };
   } catch (err) {
-    console.log(JSON.stringify(err)); //same name error problem
+    console.log(JSON.stringify(err));
     return { success: false, error: true };
   }
 };
@@ -114,7 +114,7 @@ export const deleteTeacher = async (
     // revalidatePath("/list/subjects")
     return { success: true, error: false };
   } catch (err) {
-    console.log(JSON.stringify(err)); //same name error problem
+    console.log(JSON.stringify(err));
     return { success: false, error: true };
   }
 };

@@ -1,8 +1,7 @@
-import Image from 'next/image';
-import React from 'react';
-import DeleteModal from '../Form/DeleteModal';
 import { Class, Student } from '@prisma/client';
+import Image from 'next/image';
 import Link from 'next/link';
+import DeleteModal from '../Form/DeleteModal';
 
 type StudentType = Student & { class: Class };
 
@@ -38,7 +37,9 @@ const StudentTable = ({ data, role }: StudentTableProps) => {
                     className="hidden h-8 w-8 rounded-full object-cover md:block"
                   />
                   <div>
-                    <p className="text-xs font-medium">{i.name}</p>
+                    <p className="text-xs font-medium">
+                      {i.name + ' ' + i.surname}
+                    </p>
                     <p className="text-[10px] text-gray-500">{i.class.name}</p>
                   </div>
                 </td>

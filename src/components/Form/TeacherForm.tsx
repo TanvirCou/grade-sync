@@ -10,15 +10,13 @@ import React, {
   useActionState,
   useEffect,
   useState,
+  useTransition,
 } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 
-type subjectsProps = {
-  id: number;
-  name: string;
-};
+type subjectsProps = { id: number; name: string };
 
 type DataProps = {
   id: string;
@@ -55,7 +53,7 @@ const teacherSchema = z.object({
     .optional()
     .or(z.literal('')),
   phone: z.string().optional(),
-  address: z.string(),
+  address: z.string().min(1, { message: 'Address is required!' }),
   bloodType: z.string().min(1, { message: 'Blood Type is required!' }),
   birthday: z.coerce.date({ message: 'Birthday is required!' }),
   sex: z.enum(['MALE', 'FEMALE'], { message: 'Sex is required!' }),
@@ -64,6 +62,36 @@ const teacherSchema = z.object({
 });
 
 export type TeacherSchema = z.infer<typeof teacherSchema>;
+
+const Label = ({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
+  <label className="block text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+    {children}
+    {required && <span className="ml-0.5 text-red-500">*</span>}
+  </label>
+);
+
+const inputCls = (hasError?: boolean) =>
+  `block w-full rounded-lg border ${
+    hasError ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'
+  } px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100 placeholder:text-gray-400`;
+
+const ErrorMsg = ({ msg }: { msg?: string }) =>
+  msg ? <p className="mt-0.5 text-[10px] text-red-500">{msg}</p> : null;
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <div className="mb-3 mt-5 flex items-center gap-2">
+    <span className="text-[10px] font-bold uppercase tracking-widest text-sky-500">
+      {label}
+    </span>
+    <div className="h-px flex-1 bg-sky-100" />
+  </div>
+);
 
 const TeacherForm = ({
   data,
@@ -76,17 +104,31 @@ const TeacherForm = ({
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   subjects?: subjectsProps[];
 }) => {
-  console.log(data?.sex);
-
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<TeacherSchema>({
     resolver: zodResolver(teacherSchema),
+    defaultValues: data
+      ? {
+          id: data.id,
+          username: data.username,
+          name: data.name,
+          surname: data.surname,
+          email: data.email || '',
+          phone: data.phone || '',
+          address: data.address,
+          bloodType: data.bloodType,
+          sex: data.sex as 'MALE' | 'FEMALE',
+          birthday: data.birthday.toISOString().split('T')[0] as any,
+          subjects: data.subjects.map((s) => String(s.id)),
+        }
+      : { subjects: [] },
   });
 
   const [img, setImg] = useState<any>();
+  const [isPending, startPendingTransition] = useTransition();
 
   const [state, formAction] = useActionState(
     type === 'create' ? createTeacher : updateTeacher,
@@ -104,298 +146,234 @@ const TeacherForm = ({
       );
     }
     if (state.error) {
-      toast.error('Error creating teacher!');
+      toast.error(
+        'Something went wrong! Please check the fields and try again.'
+      );
     }
   }, [state, setOpen, router, type]);
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-
-    startTransition(() => {
-      formAction({ ...data, img: img?.secure_url });
+  const onSubmit = handleSubmit((formData) => {
+    startPendingTransition(() => {
+      startTransition(() => {
+        formAction({ ...formData, img: img?.secure_url });
+      });
     });
-    // createSubject(data)
   });
 
   return (
-    <form action="" onSubmit={onSubmit}>
-      <p className="text-center text-lg font-semibold">
-        {type === 'create' ? 'Create a new teacher' : 'Update the teacher'}
-      </p>
-      <p className="my-2 text-xs text-gray-500">Authentication Information</p>
-      <div className="flex flex-col flex-wrap gap-y-2 md:flex-row md:items-center md:justify-between">
-        {data && (
+    <form onSubmit={onSubmit} className="space-y-1">
+      {/* Header */}
+      <div className="mb-4 text-center">
+        <h2 className="text-lg font-bold text-gray-800">
+          {type === 'create' ? '➕ Create Teacher' : '✏️ Update Teacher'}
+        </h2>
+        <p className="mt-0.5 text-[11px] text-gray-400">
+          Fields marked with <span className="text-red-500">*</span> are
+          required
+        </p>
+      </div>
+
+      {data && <input className="hidden" type="text" {...register('id')} />}
+
+      {/* ── Auth Section ── */}
+      <SectionHeader label="Authentication" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <Label required>Username</Label>
           <input
-            className={`hidden w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.name?.message && 'border-red-600'}`}
-            type="text"
-            {...register('id')}
-            defaultValue={data?.id}
-          />
-        )}
-        <div className="flex flex-col gap-1">
-          {/* Username */}
-          <label className="block text-[10px] font-medium text-gray-700">
-            Username
-          </label>
-          <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.username?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.username)}
             type="text"
             {...register('username')}
-            placeholder="Enter username"
-            defaultValue={data && data.username}
+            placeholder="e.g. john_doe"
           />
-          {errors.username && (
-            <p className="text-[10px] text-red-500">
-              {errors.username?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.username?.message} />
         </div>
 
-        {/* Email */}
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Email
-          </label>
+        <div>
+          <Label>Email</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.email?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.email)}
             type="email"
             {...register('email')}
-            placeholder="Enter email"
-            defaultValue={data && data.email}
+            placeholder="john@school.edu"
           />
-          {errors.email && (
-            <p className="text-[10px] text-red-500">
-              {errors.email?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.email?.message} />
         </div>
 
-        {/* Password */}
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
+        <div>
+          <Label required={type === 'create'}>
             Password
-          </label>
+            {type === 'update' && (
+              <span className="ml-1 font-normal normal-case text-gray-400">
+                (leave blank to keep)
+              </span>
+            )}
+          </Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.password?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.password)}
             type="password"
             {...register('password')}
-            placeholder="Enter password"
-            defaultValue={data && data.password}
+            placeholder={
+              type === 'update' ? 'Leave blank to keep' : 'Min. 8 characters'
+            }
           />
-          {errors.password && (
-            <p className="text-[10px] text-red-500">
-              {errors.password?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.password?.message} />
         </div>
       </div>
 
-      <p className="mb-2 mt-5 text-xs text-gray-500">Personal Information</p>
-
-      <div className="flex flex-col flex-wrap gap-y-2 md:flex-row md:items-center md:justify-between">
-        {/* First Name */}
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            First Name
-          </label>
+      {/* ── Personal Section ── */}
+      <SectionHeader label="Personal Information" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <Label required>First Name</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.name?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.name)}
             type="text"
             {...register('name')}
-            placeholder="Enter first name"
-            defaultValue={data && data.name}
+            placeholder="First name"
           />
-          {errors.name && (
-            <p className="text-[10px] text-red-500">
-              {errors.name?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.name?.message} />
         </div>
 
-        {/* Last Name */}
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Last Name
-          </label>
+        <div>
+          <Label required>Last Name</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.surname?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.surname)}
             type="text"
             {...register('surname')}
-            placeholder="Enter last name"
-            defaultValue={data && data.surname}
+            placeholder="Last name"
           />
-          {errors.surname && (
-            <p className="text-[10px] text-red-500">
-              {errors.surname?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.surname?.message} />
         </div>
 
-        {/* Phone */}
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Phone
-          </label>
+        <div>
+          <Label>Phone</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.phone?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.phone)}
             type="text"
             {...register('phone')}
-            placeholder="Enter phone"
-            defaultValue={data && data.phone}
+            placeholder="+1 234 567 8900"
           />
-          {errors.phone && (
-            <p className="text-[10px] text-red-500">
-              {errors.phone?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.phone?.message} />
         </div>
 
-        {/* Address */}
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Address
-          </label>
+        <div>
+          <Label required>Address</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.address?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.address)}
             type="text"
             {...register('address')}
-            placeholder="Enter address"
-            defaultValue={data && data.address}
+            placeholder="Street, City"
           />
-          {errors.address && (
-            <p className="text-[10px] text-red-500">
-              {errors.address?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.address?.message} />
         </div>
 
-        {/* Blood Type */}
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Blood Type
-          </label>
+        <div>
+          <Label required>Blood Type</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 ${errors.bloodType?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.bloodType)}
             type="text"
             {...register('bloodType')}
-            placeholder="Enter blood type"
-            defaultValue={data && data.bloodType}
+            placeholder="e.g. A+, O-"
           />
-          {errors.bloodType && (
-            <p className="text-[10px] text-red-500">
-              {errors.bloodType?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.bloodType?.message} />
         </div>
 
-        {/* Birthday */}
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Birthday
-          </label>
+        <div>
+          <Label required>Birthday</Label>
           <input
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.birthday?.message && 'border-red-600'}`}
+            className={inputCls(!!errors.birthday)}
             type="date"
             {...register('birthday')}
-            placeholder="Enter birthday"
             defaultValue={data?.birthday.toISOString().split('T')[0]}
           />
-          {errors.birthday && (
-            <p className="text-[10px] text-red-500">
-              {errors.birthday?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.birthday?.message?.toString()} />
         </div>
 
-        {/* Sex */}
-        <div className="flex flex-col gap-1">
-          <label className="block text-[10px] font-medium text-gray-700">
-            Sex
-          </label>
-          <select
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-3 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.sex?.message && 'border-red-600'}`}
-            {...register('sex')}
-            value={data && data.sex}
-          >
-            <option value="">Select your sex</option>
+        <div>
+          <Label required>Sex</Label>
+          <select className={inputCls(!!errors.sex)} {...register('sex')}>
+            <option value="">Select sex</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
           </select>
-          {errors.sex && (
-            <p className="text-[10px] text-red-500">
-              {errors.sex?.message?.toString()}
-            </p>
-          )}
+          <ErrorMsg msg={errors.sex?.message} />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            Subjects
-          </label>
+        <div>
+          <Label>Subjects (hold Ctrl to multi-select)</Label>
           <select
             multiple
-            className={`block w-full appearance-none rounded-md border border-gray-300 px-4 py-1 text-sm outline-1 outline-sky-200 placeholder:text-xs placeholder:text-gray-400 md:w-[200px] ${errors.subjects?.message && 'border-red-600'}`}
+            className={`${inputCls(false)} min-h-[80px]`}
             {...register('subjects')}
-            defaultValue={
-              data &&
-              (data?.subjects.map((subject: Subject) => subject.id) as any)
-            }
           >
-            {subjects &&
-              subjects.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
+            {subjects?.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
           </select>
-          {errors.subjects && (
-            <p className="text-[10px] text-red-500">
-              {errors.subjects?.message?.toString()}
-            </p>
-          )}
         </div>
 
-        {/* Image */}
-        <div className="mt-2 flex flex-col gap-1">
+        {/* Photo Upload */}
+        <div className="flex items-end">
           <CldUploadWidget
             uploadPreset="grade-sync"
             onSuccess={(res) => setImg(res?.info)}
           >
-            {({ open }) => {
-              return (
-                <div
-                  onClick={() => open()}
-                  className="flex cursor-pointer items-center gap-2 text-xs font-medium text-gray-700"
-                >
-                  <Image src="/upload.png" alt="" width={25} height={25} />
-                  <p>Select a photo</p>
-                </div>
-              );
-            }}
+            {({ open }) => (
+              <button
+                type="button"
+                onClick={() => open()}
+                className="flex items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-2.5 text-xs font-medium text-gray-500 transition hover:border-sky-400 hover:text-sky-600"
+              >
+                <Image src="/upload.png" alt="" width={18} height={18} />
+                {img ? '✅ Photo selected' : 'Upload Photo'}
+              </button>
+            )}
           </CldUploadWidget>
-
-          {errors.img && (
-            <p className="text-[10px] text-red-500">
-              {errors.img?.message?.toString()}
-            </p>
-          )}
         </div>
       </div>
 
-      {/* {state.error && !state.success && (
-        <div className='mt-2'>
-          {state.error && state?.message?.map((i: string, index: number) => (
-            <p key={index} className='text-xs text-red-600'>{i}</p>
-          ))}
-        </div>
-      )} */}
-
       {state.error && (
-        <span className="mt-2 text-xs text-red-500">Something went wrong!</span>
+        <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5">
+          <p className="text-xs font-medium text-red-600">
+            ❌ Something went wrong. Please check all required fields and try
+            again.
+          </p>
+        </div>
       )}
 
-      <button className="mt-4 w-full rounded-md bg-sky-500 py-1.5 text-xs font-medium text-white">
-        {type === 'create' ? 'Create' : 'Update'} Teacher
+      <button
+        disabled={isPending}
+        className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isPending ? (
+          <>
+            <svg
+              className="h-4 w-4 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              />
+            </svg>
+            {type === 'create' ? 'Creating…' : 'Updating…'}
+          </>
+        ) : (
+          <>{type === 'create' ? 'Create Teacher' : 'Update Teacher'}</>
+        )}
       </button>
     </form>
   );

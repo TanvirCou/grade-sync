@@ -13,7 +13,7 @@ import { deleteSubject } from '@/lib/actions/subject.actions';
 import { deleteTeacher } from '@/lib/actions/teacher.actions';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import React, { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 type TableProps =
@@ -84,24 +84,91 @@ const DeleteModal = ({ table, id }: DeleteModalProps) => {
       </button>
 
       {open && (
-        <div className="fixed left-0 top-0 z-40 flex h-screen w-full items-center justify-center bg-[#00000030]">
-          <div className="relative w-[90%] overflow-y-scroll rounded-md bg-white p-4 shadow-sm md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
-            <div
-              className="absolute right-4 top-4 cursor-pointer"
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && setOpen(false)}
+        >
+          <div className="relative w-[90%] rounded-2xl bg-white shadow-2xl md:w-[420px]">
+            <button
               onClick={() => setOpen(false)}
+              className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200"
+              aria-label="Close"
             >
-              <Image src="/close.png" alt="" width={14} height={14} />
-            </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
 
-            <form action={formAction} className="flex flex-col gap-3 p-4">
-              <p className="text-center text-[14px] font-medium">
-                All data will be lost.Are you sure to delete this {table}?
+            <div className="px-8 py-8 text-center">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#ef4444"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+
+              <h2 className="mb-2 text-xl font-bold text-gray-800">
+                Delete {table.charAt(0).toUpperCase() + table.slice(1)}?
+              </h2>
+              <p className="text-sm leading-relaxed text-gray-500">
+                This action{' '}
+                <span className="font-semibold text-gray-700">
+                  cannot be undone
+                </span>
+                . All data associated with this {table} will be permanently
+                removed.
               </p>
-              <input type="text | number" name="id" hidden defaultValue={id} />
-              <button className="w-fit self-center rounded-md bg-red-600 px-4 py-2 text-xs font-medium text-white">
-                Delete
-              </button>
-            </form>
+
+              <div className="my-6 h-px bg-gray-100" />
+
+              <form
+                action={formAction}
+                className="flex items-center justify-center gap-3"
+              >
+                <input
+                  type="text"
+                  name="id"
+                  hidden
+                  defaultValue={id}
+                  readOnly
+                />
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 active:scale-[0.98]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-200 transition hover:bg-red-600 active:scale-[0.98]"
+                >
+                  Yes, Delete
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}

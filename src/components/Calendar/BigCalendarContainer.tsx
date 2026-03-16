@@ -1,8 +1,7 @@
-import React from 'react';
-import BigCalendar from './BigCalendar';
-import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { adjustScheduleToCurrentWeek } from '@/lib/utils';
+import { Prisma } from '@prisma/client';
+import BigCalendar from './BigCalendar';
 
 const BigCalendarContainer = async ({
   type,

@@ -7,7 +7,6 @@ import { auth } from '@clerk/nextjs/server';
 import { Prisma } from '@prisma/client';
 import { Metadata } from 'next';
 import Image from 'next/image';
-import React from 'react';
 
 type SearchParams = Promise<{ [key: string]: string | undefined }>;
 
@@ -93,6 +92,7 @@ const ListPageOfResults = async (props: { searchParams: SearchParams }) => {
           },
         },
       },
+      orderBy: { id: 'desc' },
       take: 10,
       skip: 10 * (p - 1),
     }),

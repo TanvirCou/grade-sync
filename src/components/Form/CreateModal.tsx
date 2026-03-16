@@ -2,7 +2,7 @@
 import { Class } from '@prisma/client';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import { useState } from 'react';
 // import ClassForm from './ClassForm';
 // import TeacherForm from './TeacherForm';
 // import StudentForm from './StudentForm';
@@ -187,16 +187,13 @@ const CreateModal = ({
               <Image src="/close.png" alt="" width={14} height={14} />
             </div>
 
-            {
-              table === 'teacher' && (
-                <TeacherForm
-                  type="create"
-                  setOpen={setOpen}
-                  subjects={subjects}
-                />
-              )
-              // Add more form components for other tables as needed...
-            }
+            {table === 'teacher' && (
+              <TeacherForm
+                type="create"
+                setOpen={setOpen}
+                subjects={subjects}
+              />
+            )}
             {table === 'student' && (
               <StudentForm
                 type="create"
@@ -220,79 +217,55 @@ const CreateModal = ({
                 classGrades={classGrades}
               />
             )}
-            {
-              table === 'exam' && (
-                <ExamForm type="create" setOpen={setOpen} lessons={lessons} />
-              )
-              // Add more form components for other tables as needed...
-            }
-            {
-              table === 'assignment' && (
-                <AssignmentForm
-                  type="create"
-                  setOpen={setOpen}
-                  lessons={lessons}
-                />
-              )
-              // Add more form components for other tables as needed...
-            }
+            {table === 'exam' && (
+              <ExamForm type="create" setOpen={setOpen} lessons={lessons} />
+            )}
+            {table === 'assignment' && (
+              <AssignmentForm
+                type="create"
+                setOpen={setOpen}
+                lessons={lessons}
+              />
+            )}
 
-            {
-              table === 'announcement' && (
-                <AnnouncementForm
-                  type="create"
-                  setOpen={setOpen}
-                  classes={classes}
-                />
-              )
-              // Add more form components for other tables as needed...
-            }
-            {
-              table === 'parent' && (
-                <ParentForm type="create" setOpen={setOpen} />
-              )
-              // Add more form components for other tables as needed...
-            }
-            {
-              table === 'lesson' && (
-                <LessonForm
-                  type="create"
-                  setOpen={setOpen}
-                  subjects={subjects}
-                  classes={classes}
-                  teachersData={teachersData}
-                />
-              )
-              // Add more form components for other tables as needed...
-            }
-            {
-              table === 'event' && (
-                <EventForm type="create" setOpen={setOpen} classes={classes} />
-              )
-              // Add more form components for other tables as needed...
-            }
-            {
-              table === 'result' && (
-                <ResultForm
-                  type="create"
-                  setOpen={setOpen}
-                  exams={exams}
-                  assignments={assignments}
-                />
-              )
-              // Add more form components for other tables as needed...
-            }
+            {table === 'announcement' && (
+              <AnnouncementForm
+                type="create"
+                setOpen={setOpen}
+                classes={classes}
+              />
+            )}
+            {table === 'parent' && (
+              <ParentForm type="create" setOpen={setOpen} />
+            )}
+            {table === 'lesson' && (
+              <LessonForm
+                type="create"
+                setOpen={setOpen}
+                subjects={subjects}
+                classes={classes}
+                teachersData={teachersData}
+              />
+            )}
+            {table === 'event' && (
+              <EventForm type="create" setOpen={setOpen} classes={classes} />
+            )}
+            {table === 'result' && (
+              <ResultForm
+                type="create"
+                setOpen={setOpen}
+                exams={exams}
+                assignments={assignments}
+              />
+            )}
 
-            {
-              table === 'attendance' && (
-                <AttendanceForm
-                  type="create"
-                  setOpen={setOpen}
-                  lessons={lessons}
-                />
-              )
-              // Add more form components for other tables as needed...
-            }
+            {table === 'attendance' && (
+              <AttendanceForm
+                type="create"
+                setOpen={setOpen}
+                lessons={lessons}
+              />
+            )}
           </div>
         </div>
       )}
